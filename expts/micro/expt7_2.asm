@@ -73,6 +73,7 @@ writenumber subno,100
     
 subb:
 
+
     
    mov al,[number+esi]
    mov bl,[number2+esi]
