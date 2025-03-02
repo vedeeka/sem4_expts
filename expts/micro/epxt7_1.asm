@@ -81,6 +81,7 @@ add:
    or al,30h
    popf
    
+   
    mov[sum+esi],al
    dec esi
    loop add
