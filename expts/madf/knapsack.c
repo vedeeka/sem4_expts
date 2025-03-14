@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #define MAX 100
 
-int order[MAX];
+int order[MAX], x[MAX];
 
+// Function to sort items by profit/weight ratio
 void sort_pw(int n, int profit[], int weight[]) {
     float pw[n];
     for (int i = 0; i < n; i++) {
@@ -20,59 +21,61 @@ void sort_pw(int n, int profit[], int weight[]) {
     }
 }
 
-void knapsack(int n, int weight[], int profit[], int capacity) {
-    float x[MAX] = {0.0}, total_profit = 0.0;
-    int u = capacity;
+// Function to find all subsets of items that fit in the knapsack
+void knapsack_all_solutions(int index, int n, int weight[], int profit[], int capacity, int current_weight, int current_profit) {
+    if (current_weight <= capacity) {
+        printf("\nSolution: ");
+        for (int i = 0; i < n; i++) printf("%d ", x[i]);
+        printf("\nTotal Profit: %d\n", current_profit);
+    }
+    if (index == n) return;
+    
+    // Include current item if it fits
+    if (current_weight + weight[index] <= capacity) {
+        x[index] = 1;
+        knapsack_all_solutions(index + 1, n, weight, profit, capacity, current_weight + weight[index], current_profit + profit[index]);
+        x[index] = 0;
+    }
 
-    sort_pw(n, profit, weight);
-    printf("Solution: ");
-    for (int i = 0; i < n && weight[order[i]] <= u; i++) {
-        x[order[i]] = 1.0;
-        total_profit += profit[order[i]];
-        u -= weight[order[i]];
-    }
-    if (u > 0) {
-        int i = 0;
-        while (i < n && weight[order[i]] <= u) i++;
-        if (i < n) {
-            x[order[i]] = (float)u / weight[order[i]];
-            total_profit += profit[order[i]] * x[order[i]];
-        }
-    }
-    for (int i = 0; i < n; i++) printf("%.2f ", x[i]);
-    printf("\nTotal Profit: %.2f\n", total_profit);
+    // Exclude current item and move to next
+    knapsack_all_solutions(index + 1, n, weight, profit, capacity, current_weight, current_profit);
 }
 
-void subset_sum(int index, int sum, int n, int w[], int target, int x[]) {
+// Function to find all subsets that sum to target (Subset Sum Problem)
+void subset_sum(int index, int sum, int n, int w[], int target) {
     if (sum == target) {
-        printf("Solution: ");
+        printf("\nSubset Sum Solution: ");
         for (int i = 0; i < n; i++) printf("%d ", x[i]);
         printf("\n");
         return;
     }
     if (index == n || sum > target) return;
+    
     x[index] = 1;
-    subset_sum(index + 1, sum + w[index], n, w, target, x);
+    subset_sum(index + 1, sum + w[index], n, w, target);
     x[index] = 0;
-    subset_sum(index + 1, sum, n, w, target, x);
+    subset_sum(index + 1, sum, n, w, target);
 }
 
 int main() {
-    int n, capacity, choice, profit[MAX], weight[MAX], target, x[MAX] = {0};
-    while (1) {
-        printf("\n1. Knapsack Problem\n2. Subset Sum Problem\n3. Exit\nEnter choice: ");
-        scanf("%d", &choice);
-        if (choice == 3) break;
-        if (choice == 1) {
-            printf("Enter number of items: "); scanf("%d", &n);
-            printf("Enter knapsack capacity: "); scanf("%d", &capacity);
-            printf("Enter profits: "); for (int i = 0; i < n; i++) scanf("%d", &profit[i]);
-            printf("Enter weights: "); for (int i = 0; i < n; i++) scanf("%d", &weight[i]);
-            knapsack(n, weight, profit, capacity);
-            subset_sum(0, 0, n, weight, target, x);
-        }  else {
-            printf("Invalid choice!\n");
-        }
-    }
+    int n, capacity, profit[MAX], weight[MAX], target;
+
+    // Knapsack Problem
+    printf("Enter number of items: "); scanf("%d", &n);
+    printf("Enter knapsack capacity: "); scanf("%d", &capacity);
+    printf("Enter profits: "); for (int i = 0; i < n; i++) scanf("%d", &profit[i]);
+    printf("Enter weights: "); for (int i = 0; i < n; i++) scanf("%d", &weight[i]);
+
+    printf("\nAll Knapsack Solutions:\n");
+    knapsack_all_solutions(0, n, weight, profit, capacity, 0, 0);
+
+    // Subset Sum Problem
+    printf("\nEnter number of elements: "); scanf("%d", &n);
+    printf("Enter elements: "); for (int i = 0; i < n; i++) scanf("%d", &weight[i]);
+    printf("Enter target sum: "); scanf("%d", &target);
+
+    printf("\nAll Subset Sum Solutions:\n");
+    subset_sum(0, 0, n, weight, target);
+
     return 0;
 }
