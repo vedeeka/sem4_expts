@@ -81,54 +81,6 @@ void knapsack_profit_weight_ratio(int n, int w[], int p[], int m)
     profits[3] = total_profit;
 }
 
-void knapsack_random(int n, int w[], int p[], int m) {
-    float x_r[n], total_weight = 0, total_profit = 0;
-    
-    srand(time(0)); // Seed random generator
-
-    // Initialize all fractions as 0
-    for (int i = 0; i < n; i++) {
-        x_r[i] = 0.0;
-    }
-
-    int items_left = n;
-    while (total_weight < m && items_left > 0) {
-        int i = rand() % n; // Pick a random item
-
-        // If the item is already fully taken, skip it
-        if (x_r[i] == 1.0) continue;
-
-        // Choose a random fraction between 0 and 1 for the selected item
-        float fraction = (float)(rand() % 100) / 100.0;
-
-        // Compute possible weight addition
-        float weight_addition = fraction * w[i];
-
-        if (total_weight + weight_addition > m) {
-            // Adjust fraction to fit exactly in the remaining space
-            fraction = (m - total_weight) / (float)w[i];
-            weight_addition = fraction * w[i];
-        }
-
-        // Update values
-        x_r[i] += fraction;
-        total_weight += weight_addition;
-        total_profit += fraction * p[i];
-
-        // If this item is fully taken, reduce items left
-        if (x_r[i] == 1.0) {
-            items_left--;
-        }
-    }
-
-    // Print results
-    printf("Selected fractions:\n");
-    for (int i = 0; i < n; i++) {
-        printf("Item %d: %.2f\n", i + 1, x_r[i]);
-    }
-    printf("Total Weight: %.2f\n", total_weight);
-    printf("Total Profit: %.2f\n", total_profit);
-}
 
 
 void knapsack_max_profit(int n, int w[], int p[], int m)
@@ -228,8 +180,7 @@ void knapsack_least_weight(int n, int w[], int p[], int m)
 
 void solve_multiple_strategies(int n, int w[], int p[], int m)
 {
-    // Solve using different strategies
-    knapsack_random(n, w, p, m);
+   
     knapsack_max_profit(n, w, p, m);
     knapsack_least_weight(n, w, p, m);
     knapsack_profit_weight_ratio(n, w, p, m);
@@ -239,8 +190,7 @@ void solve_multiple_strategies(int n, int w[], int p[], int m)
     printf("%-10s %-25s %-15s %-15s %s\n", "", "(x₁, x₂, x₃)", "Capacity of bag", "Profit to be max", "(strategy used)");
     printf("===================================================================================\n");
     
-    display_solution(1, x_solution[0], w, p, n, m);
-    printf("\t\trandomly chosen\n");
+    
     
     display_solution(2, x_solution[1], w, p, n, m);
     printf("\t\tmax. profit\n");
@@ -262,52 +212,8 @@ void solve_multiple_strategies(int n, int w[], int p[], int m)
     }
     
     printf("\nBest strategy: ");
-    switch (best_strategy) {
-        case 0: printf("randomly chosen\n"); break;
-        case 1: printf("max. profit\n"); break;
-        case 2: printf("least weight\n"); break;
-        case 3: printf("descending order of p/w\n"); break;
-    }
-    printf("Maximum profit: %.1f\n", max_profit);
-}
 
-void Sum(int s, int k, int r)
-{
- 
-    if (k == n)
-    {
-    
-        if (s == m) {
-            for (int i = 0; i < n; i++)
-                printf("%d\t", x[i]);
-            printf("\n");
-        }
-        return;
-    }
-    
-    int i;
-    x[k] = 1;
-    count += 2;
-    if (s + w[k] == m)
-    {
-        for (i = 0; i <= k; i++)
-            printf("%d\t", x[i]);
-        printf("\n");
-       
-    }
-    else if ((s + w[k] + w[k + 1]) <= m && k + 1 < n)
-    {
-     
-        Sum(s + w[k], k + 1, r - w[k]);
-    }
-    
- 
-    if ((s + r - w[k] >= m) && (k + 1 < n) && (s + w[k + 1] <= m))
-    {
-        x[k] = 0;
-  
-        Sum(s, k + 1, r - w[k]);
-    }
+    printf("Maximum profit: %.1f\n", max_profit);
 }
 
 int main()
@@ -330,13 +236,14 @@ int main()
     
     printf("Enter value of m (capacity): ");
     scanf("%d", &m);
-    
+    int sum;
     printf("Enter profits (p1,p2,...): ");
     for (i = 0; i < n; i++)
         scanf("%d", &p[i]);
 
       
             solve_multiple_strategies(n, w_temp, p, m);
+
            
 
     
