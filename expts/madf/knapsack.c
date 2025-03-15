@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #define MAX 100
 #include<time.h>
-int count = 0;
+
 int order[MAX];
 int x[MAX], w[MAX];
 int m, n;
