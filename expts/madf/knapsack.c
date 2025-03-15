@@ -325,7 +325,7 @@ int main()
 
 //      printf("\n Sorted weights: ");
 //      for (int i = 0; i < n; i++) {
-//         printf("%f ", x[i]);
+//         printf("%.2f ", x[i]);
 //  }
 
 // }
@@ -344,13 +344,16 @@ int main()
 
 //   for(int i=0;i<n;i++){
 //     for(int j=0;j<n-i-1;j++){
-//         if(p[index[j]]/w[index[j]]<p[index[j+1]]/w[index[j+1]]){
+//         if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]]) {
+            
 //             int t=index[j];
 //             index[j]=index[j+1];
 //             index[j+1]=t;
 //         }
 //     }
 //   }
+
+ 
 
 //   for(int i=0;i<n && remaining>0;i++){
 //         int id=index[i];
@@ -370,7 +373,7 @@ int main()
 
 //      printf("\n \nSorted weights: ");
 //      for (int i = 0; i < n; i++) {
-//         printf("%f ", x[i]);
+//         printf("%.2f ", x[i]);
 //  }
 
 
@@ -392,7 +395,8 @@ int main()
 
 //   for(int i=0;i<n;i++){
 //     for(int j=0;j<n-i-1;j++){
-//         if(p[index[j]]/w[index[j]]<p[index[j+1]]/w[index[j+1]]){
+//         if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]])
+// {
 //             int t=index[j];
 //             index[j]=index[j+1];
 //             index[j+1]=t;
@@ -418,7 +422,7 @@ int main()
 
 //      printf("\n \nSorted weights: ");
 //      for (int i = 0; i < n; i++) {
-//         printf("%f ", x[i]);
+//         printf("%.2f ", x[i]);
 //  }
 
 
