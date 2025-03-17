@@ -1,59 +1,90 @@
-#include <stdio.h>
-int b[10];
-void swap(int i,int j,int a[]){
-    int t=a[i];
-    a[i]=a[j];
-    a[j]=t;
-}
+#include<stdio.h>
+#include<stdlib.h>
+int t[10][2];
+int cost[10][10];
+int near[10];
 
-int partition(int low,int high,int a[]){
-int i=low;
-int j=high;
-int p=a[low];
-while(i<j){
-    while(i<=high && a[i]<=p){
-        i++;
-    }
-    while(a[j]>p){
-        j--;
-    }
-    if(i<j){
-        swap(i,j,a);
-    }
-}
-swap(low,j,a);
-return j;
-}
-void merge(int low,int h,int a[],int k){
-    while(low<h){
-        int j =partition(low,h,a);
-        if(k==j) return;
-        else if(k<j){
-            h=j;
+#define INF 99999
+void prims(int cost[][10],int n,int l,int k){
+    int mincost = cost[k][l];  
+    t[0][0] = k;  
+    t[0][1] = l;
+    
+
+    for(int i=0;i<=n;i++){
+        if(cost[i][l]<cost[i][k]){
+            near[i]=l;
         }else{
-            low=j+1;
+            near[i]=k;
         }
     }
+    near[l]=0;
+    near[k]=0;
+    for(int j=1;j<n;j++){
+        int min =INF;
+        int vn=-1;
+        for(int i=0;i<=n;i++){
+            if(near[i]!=0 && cost[i][near[i]]<min){
+                min=cost[i][near[i]];
+                vn=i;
+            }
+        }
+        t[j][0]=vn;
+        t[j][1]=near[vn];
+        if(vn==-1)
+        break;
+        mincost=mincost+cost[vn][near[vn]];
+        near[vn] = 0;
+
+       
+        for (int i = 1; i <= n; i++) {
+            if (near[i] != 0 && cost[i][vn] < cost[i][near[i]]) {
+                near[i] = vn;
+            }
+        }
+        
+    }
+
+
+
+
+    printf("\nMinimum Spanning Tree Edges:\n");
+    for (int i = 0; i < n - 1; i++) {
+        printf("%d - %d\n", t[i][0], t[i][1]);
+    }
+    
+    printf("\nMinimum Cost: %d\n", mincost);
 }
 
-int main() {
-    int n, i;
-    printf("Enter the number of elements in the array: ");
-    scanf("%d", &n);
-    int a[n];
-    printf("Enter the elements of the array:\n");
-    for (i = 0; i < n; i++) {
-        scanf("%d", &a[i]);
+int main(){
+    int l,m,k;
+    printf("enter");
+
+    for(int i = 0; i < 10; i++) {
+        for(int j = 0; j < 10; j++) {
+            cost[i][j] = INF; // Fix: Set all values to a large number
+        }
     }
- int k=3;
- int min,max;
-merge(0,n,a,k);
+        while(1){
+                scanf("%d %d %d",&l,&m,&k);
+                if(l==-1){
+                    break;  
+                }
+                cost[l][m]=k;
+                cost[m][l]=k; 
+        }
+        int min = INF;
+
+        for(int i=0;i<=8;i++){
+            for(int j=0;j<=8;j++){
+                if (cost[i][j] != 0 && cost[i][j] < min) { 
+                    min=cost[i][j];
+                    l=i;
+                    k=j;
+                }
+            }
+        }
 
 
-
-    printf("%d ", a[k]);
-
-
-
-    return 0;
+        prims(cost, 8, l, k);
 }
