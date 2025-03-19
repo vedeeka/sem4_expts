@@ -8,6 +8,7 @@ typedef struct {
 int parent[100];
 
 
+
 void adjust(Edge a[], int i, int n) {
     int j = 2 * i;
     Edge item = a[i];
