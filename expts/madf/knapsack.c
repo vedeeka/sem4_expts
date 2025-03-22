@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include<time.h>
 int n;
 int p[100], w[100];
 
@@ -95,14 +95,29 @@ int main() {
         scanf("%d", &p[i]);
     }
 
+    clock_t start, end;
+    double cpu_time_used;
+
     printf("\n--- Using Maximum Profit ---");
+    start = clock();
     knapsack(n, m, 2);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Time taken: %.2f ms\n", cpu_time_used);
 
     printf("\n--- Using Least Weight ---");
+    start = clock();
     knapsack(n, m, 1);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Time taken: %.2f ms\n", cpu_time_used);
 
     printf("\n--- Using Maximum Profit/Weight Ratio ---");
+    start = clock();
     knapsack(n, m, 3);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Time taken: %.2f ms\n", cpu_time_used);
 
     return 0;
 }
