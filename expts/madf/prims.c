@@ -125,22 +125,21 @@ int main() {
            }
        }
    }
+clock_t start, end;
+double cpu_time_used;
 
+start = clock();
+int mincost = prims(t, n, cost, near);
+end = clock();
 
-   int mincost = prims(t, n, cost, near);
+cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
 
+printf("\n");
+printf("The minimum cost is: %d\n", mincost);
+printf("Time taken to execute Prim's algorithm: %f ms\n", cpu_time_used);
 
+return 0;
 
-
-   printf("\n");
-
-
-
-
-   printf("The minimum cost is: %d\n", mincost);
-
-
-   return 0;
 }
 
 
