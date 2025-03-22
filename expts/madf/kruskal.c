@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-
+#include <time.h>
 typedef struct {
     int u, v, w;
 } Edge;
 
 int parent[100];
-
-
 
 void adjust(Edge a[], int i, int n) {
     int j = 2 * i;
@@ -79,6 +77,7 @@ int kruskal(Edge t[], int n, int cost[100][100], Edge a[], int edgeCount) {
             mincost += e.w;
             unions(j, k);
             i++;
+            printf("Current minimum cost: %d\n", mincost);
         }
     }
     
@@ -126,12 +125,21 @@ int main() {
         printf("\n");
     }
     
+    clock_t start, end;
+    double cpu_time_used;
+    
+    start = clock();
     int mincost = kruskal(t, n, cost, a, edgeCount);
+    end = clock();
+    
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    
     if (mincost != -1) {
         showmst(n, t);
         printf("Minimum cost of spanning tree: %d\n", mincost);
     }
     
+    printf("Time taken to execute Kruskal's algorithm: %f ms\n", cpu_time_used);
     return 0;
 }
 
