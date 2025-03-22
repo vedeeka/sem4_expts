@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #define MAX 100  
 #define INF 99999
-
+#include<time.h>
 int dist[MAX];
 bool s[MAX];
 
@@ -84,48 +84,56 @@ void shortestPath (int n, int cost[MAX][MAX], int v) {
 }
 
 int main () {
-	int n, maxE, i, j, o, d, w, start	;
+	int n, maxE, i, j, o, d, w, start;
 	int cost[MAX][MAX];
+	clock_t start_time, end_time;
+	double cpu_time_used;
 	
 	printf("\nEnter the number of vertices: ");
-    scanf("%d", &n);
-    maxE = n * (n - 1);
+	scanf("%d", &n);
+	maxE = n * (n - 1);
 
-    for (i = 1; i <= n; i++) {
-        for (j = 1; j <= n; j++) {
-            cost[i][j] = INF;
-        }
-    }
+	for (i = 1; i <= n; i++) {
+		for (j = 1; j <= n; j++) {
+			cost[i][j] = INF;
+		}
+	}
 
-    for (i = 1; i <= maxE; i++) {
-        printf("Enter edge %d (-1, -1 to quit): ", i);
-        scanf("%d%d", &o, &d);
-        if (o == -1 && d == -1) {
-            break;
-        }
-        if (o > n || d > n || o < 0 || d < 0) {
-            printf("\nInvalid Input");
-            i--;
-        } else {
-            printf("Enter weight of edge: ");
-            scanf("%d", &w);
-            cost[o][d] = w;
-        }
-    }
-    
-    printf ("\nEnter the starting vertex: ");
-    scanf ("%d", &start);
-    
-    shortestPath (n, cost, start);
-    
-    printf("\nVertex\tShortest Distance from %d\n", start);
-    for (i = 1; i <= n; i++) {
-        printf("%d\t", i);
-        if (dist[i] == INF)
-            printf("INF\n");
-        else
-            printf("%d\n", dist[i]);
-    }
+	for (i = 1; i <= maxE; i++) {
+		printf("Enter edge %d (-1, -1 to quit): ", i);
+		scanf("%d%d", &o, &d);
+		if (o == -1 && d == -1) {
+			break;
+		}
+		if (o > n || d > n || o < 0 || d < 0) {
+			printf("\nInvalid Input");
+			i--;
+		} else {
+			printf("Enter weight of edge: ");
+			scanf("%d", &w);
+			cost[o][d] = w;
+		}
+	}
+	
+	printf ("\nEnter the starting vertex: ");
+	scanf ("%d", &start);
+	
+	start_time = clock();
+	shortestPath (n, cost, start);
+	end_time = clock();
+	
+	cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC * 1000;
+	
+	printf("\nVertex\tShortest Distance from %d\n", start);
+	for (i = 1; i <= n; i++) {
+		printf("%d\t", i);
+		if (dist[i] == INF)
+			printf("INF\n");
+		else
+			printf("%d\n", dist[i]);
+	}
+	
+	printf("\nTime taken to execute the function: %f ms\n", cpu_time_used);
 }
 
 
