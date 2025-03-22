@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <limits.h>
 #define INF INT_MAX
-
+#include <time.h>
 int k = 1, l;
 
 void showmst(int n, int t[][2]) {
