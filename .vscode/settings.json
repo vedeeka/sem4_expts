@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.asm": "assembly",
+        "time.h": "c"
+    }
+}

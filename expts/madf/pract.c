@@ -1,90 +1,104 @@
-#include<stdio.h>
-#include<stdlib.h>
-int t[10][2];
-int cost[10][10];
-int near[10];
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+typedef struct {
+    int u, v, w;
+} Edge;
 
-#define INF 99999
-void prims(int cost[][10],int n,int l,int k){
-    int mincost = cost[k][l];  
-    t[0][0] = k;  
-    t[0][1] = l;
-    
+int parent[100];
 
-    for(int i=0;i<=n;i++){
-        if(cost[i][l]<cost[i][k]){
-            near[i]=l;
-        }else{
-            near[i]=k;
+void adjust(Edge a[], int i, int n) {
+    int j = 2 * i;
+    Edge item = a[i];
+    while (j <= n) {
+        if ((j < n) && (a[j].w > a[j + 1].w || 
+            (a[j].w == a[j + 1].w && a[j].u > a[j + 1].u))) {
+            j = j + 1;
         }
-    }
-    near[l]=0;
-    near[k]=0;
-    for(int j=1;j<n;j++){
-        int min =INF;
-        int vn=-1;
-        for(int i=0;i<=n;i++){
-            if(near[i]!=0 && cost[i][near[i]]<min){
-                min=cost[i][near[i]];
-                vn=i;
-            }
+        if (item.w <= a[j].w && 
+            (item.w < a[j].w || item.u <= a[j].u)) {
+            break;
         }
-        t[j][0]=vn;
-        t[j][1]=near[vn];
-        if(vn==-1)
-        break;
-        mincost=mincost+cost[vn][near[vn]];
-        near[vn] = 0;
-
-       
-        for (int i = 1; i <= n; i++) {
-            if (near[i] != 0 && cost[i][vn] < cost[i][near[i]]) {
-                near[i] = vn;
-            }
-        }
-        
+        a[j / 2] = a[j];
+        j = 2 * j;
     }
-
-
-
-
-    printf("\nMinimum Spanning Tree Edges:\n");
-    for (int i = 0; i < n - 1; i++) {
-        printf("%d - %d\n", t[i][0], t[i][1]);
+    a[j / 2] = item;
+}
+Edge deleteMin(Edge a[], int *n) {
+    if (*n == 0) {
+        printf("Heap is empty\n");
+        Edge empty = {-1, -1, -1};
+        return empty;
     }
-    
-    printf("\nMinimum Cost: %d\n", mincost);
+    Edge item = a[1];
+    a[1] = a[*n];
+    (*n)--;
+    adjust(a, 1, *n);
+    return item;
 }
 
-int main(){
-    int l,m,k;
-    printf("enter");
+void showmst(int n, Edge t[]) {
+    printf("The edges of the Minimum Spanning Tree (MST) are:\n");
+    for (int i = 0; i < n - 1; i++) {
+        printf("%d - %d (Weight: %d)\n", t[i].u, t[i].v, t[i].w);
+    }
+}
 
-    for(int i = 0; i < 10; i++) {
-        for(int j = 0; j < 10; j++) {
-            cost[i][j] = INF; // Fix: Set all values to a large number
+
+int find(int i) {
+    while (parent[i] != i) {
+        parent[i] = parent[parent[i]]; // Path compression optimization
+        i = parent[i];
+    }
+    return i;
+}
+
+void unions(int i, int j) {
+    parent[i] = j;
+}
+
+void krushkal(Edge t[], int n, Edge a[], int edgeCount) {
+    adjust(a, 1, edgeCount);
+    int mincost = 0;
+    int i = 0;
+    while (i < n - 1 && edgeCount > 0) {
+        Edge e = deleteMin(a, &edgeCount);
+        int j = find(e.u);
+        int k = find(e.v);
+        if (j != k) {
+            t[i] = e;
+            mincost += e.w;
+            unions(j, k);
+            i++;
         }
     }
-        while(1){
-                scanf("%d %d %d",&l,&m,&k);
-                if(l==-1){
-                    break;  
-                }
-                cost[l][m]=k;
-                cost[m][l]=k; 
-        }
-        int min = INF;
-
-        for(int i=0;i<=8;i++){
-            for(int j=0;j<=8;j++){
-                if (cost[i][j] != 0 && cost[i][j] < min) { 
-                    min=cost[i][j];
-                    l=i;
-                    k=j;
-                }
+    if (i != n - 1) {
+        printf("The graph is not connected, MST cannot be formed.\n");
+        return;
+    }
+    showmst(n, t);
+    printf("Minimum cost of spanning tree: %d\n", mincost);
+}
+int main(){
+    int n;
+    Edge t[100], a[100];
+    printf("Enter the number of vertices: ");
+    scanf("%d", &n);
+    int edgeCount = 0;
+    printf("Enter the cost adjacency matrix (use 0 for no edge):\n");
+    for (int i = 1; i <= n; i++) {
+        parent[i] = i;
+        for (int j = 1; j <= n; j++) {
+            int w;
+            scanf("%d", &w);
+            if (w != 0) {
+                a[edgeCount].u = i;
+                a[edgeCount].v = j;
+                a[edgeCount].w = w;
+                edgeCount++;
             }
         }
-
-
-        prims(cost, 8, l, k);
+    }
+    krushkal(t, n, a, edgeCount);
+    return 0;
 }
