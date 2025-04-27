@@ -1,159 +1,131 @@
-// #include <stdio.h>
-
-// int n, m; // number of items and target sum
-// int w[10], x[10]; // array of weights and solution array
-
-// void printSubset() {
-//     printf("Subset found: ");
-//     for (int i = 1; i <= n; i++) {
-//         if (x[i] == 1)
-//             printf("%d ", w[i]);
-//     }
-//     printf("\n");
-// }
-
-// void sumOfSubsets(int s, int k, int r) {
-//     x[k] = 1; // generate left child (include item k)
-
-//     if (s + w[k] == m) {
-//         printSubset();
-//     } else if (s + w[k] + w[k + 1] <= m) {
-//         sumOfSubsets(s + w[k], k + 1, r - w[k]);
-//     }
-
-//     // generate right child (exclude item k) and check feasibility
-//     if ((s + r - w[k] >= m) && (s + w[k + 1] <= m)) {
-//         x[k] = 0;
-//         sumOfSubsets(s, k + 1, r - w[k]);
-//     }
-// }
-
-// int main() {
-//     printf("Enter number of items: ");
-//     scanf("%d", &n);
-
-//     printf("Enter the weights in non-decreasing order: ");
-//     int sum = 0;
-//     for (int i = 1; i <= n; i++) {
-//         scanf("%d", &w[i]);
-//         sum += w[i];
-//     }
-
-//     printf("Enter the target sum: ");
-//     scanf("%d", &m);
-
-//     printf("Subsets with sum %d are:\n", m);
-//     sumOfSubsets(0, 1, sum);
-
-//     return 0;
-// }
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define MAX_ITEMS 20
+#define MAX 100
+#define INF 9999
 #define MAX_PREFIX 1024
-#define MAX_SOLUTIONS 100
 
-int n, m;                      // number of items and target sum
-int w[MAX_ITEMS];              // array of weights
-int x[MAX_ITEMS];              // solution vector
-int sol_count = 0;             // solution counter
+struct treeNode {
+    int id, s, k, r, inc;       
+    struct treeNode *left;  
+    struct treeNode *right;
+};
+
+int n, m, nc = 0, soli = 0;
+int w[MAX], x[MAX], sol[MAX][MAX];
 char sol_labels[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// To store all solutions for printing later
-int solutions[MAX_SOLUTIONS][MAX_ITEMS];
-int solution_weights[MAX_SOLUTIONS][MAX_ITEMS];
-int solution_items[MAX_SOLUTIONS];
+struct treeNode* createN(int s, int k, int r, int inc) {
+    struct treeNode* nn = (struct treeNode*)malloc(sizeof(struct treeNode));
+    if (nn == NULL) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+    nc++;
+    nn->id = nc;
+    nn->s = s;
+    nn->k = k;
+    nn->r = r;
+    nn->inc = inc;
+    nn->left = NULL;
+    nn->right = NULL;
+    return nn;
+}
 
-// Function to format node information
-void formatNode(char* buffer, int s, int k, int r) {
-    sprintf(buffer, "[%d,%d,%d]", s, k, r);
-    
-    // Mark solution nodes
-    if (s == m) {
+void saveSolution() {
+    int i;
+    for (i = 1; i <= n; i++) {
+        sol[soli][i] = x[i];
+    }
+    soli++;
+}
+
+struct treeNode* SumOfSub(int s, int k, int r) {
+    struct treeNode* cnode = createN(s, k, r, 1);
+    x[k] = 1;
+    if (s + w[k] == m) {
+        cnode->left = createN(s + w[k], k + 1, r - w[k], 0);
+        saveSolution();
+    } else if (s + w[k] + w[k + 1] <= m && k < n) {
+        cnode->left = SumOfSub(s + w[k], k + 1, r - w[k]);
+    }
+    if ((s + r - w[k] >= m) && (s + w[k + 1] <= m || k == n) && k < n) {
+        x[k] = 0;
+        cnode->inc = 0;
+        cnode->right = SumOfSub(s, k + 1, r - w[k]);
+    }
+    return cnode;
+}
+
+void freeTree(struct treeNode* node) {
+    if (node == NULL) return;
+    freeTree(node->left);
+    freeTree(node->right);
+    free(node);
+}
+
+void formatNodeInfo(char* buffer, struct treeNode* node) {
+    sprintf(buffer, "[s=%d, k=%d, r=%d]", node->s, node->k, node->r);
+    if (node->s == m) {
         char solution_mark[10];
-        sprintf(solution_mark, " (%c)", sol_labels[sol_count]);
+        sprintf(solution_mark, " (%c)", sol_labels[node->id % 26]);
         strcat(buffer, solution_mark);
-        
-        // Store this solution
-        for (int i = 1; i <= n; i++) {
-            solutions[sol_count][i] = x[i];
-            if (x[i] == 1) {
-                solution_weights[sol_count][solution_items[sol_count]] = w[i];
-                solution_items[sol_count]++;
-            }
-        }
-        sol_count++;
     }
 }
 
-// Function to print tree structure horizontally
-void sumOfSubsetsTree(int s, int k, int r, char* prefix) {
+void printHorizontalTree(struct treeNode* node, char* prefix) {
+    if (node == NULL) return;
     char node_info[64];
-    char new_prefix[MAX_PREFIX];
-    char branch_prefix[MAX_PREFIX];
-    
-    // Format current node
-    formatNode(node_info, s, k, r);
-    
-    // Print current node with prefix
-    printf("%s%s\n", prefix, node_info);
-    
-    // Termination or pruning conditions
-    if (k > n || s > m || s + r < m) {
+    char include_prefix[MAX_PREFIX];
+    char exclude_prefix[MAX_PREFIX];
+    formatNodeInfo(node_info, node);
+    printf("%s%s (Node %d)\n", prefix, node_info, node->id);
+    if (node->left == NULL && node->right == NULL) {
         return;
     }
-    
-    // Calculate prefix for branches
-    sprintf(branch_prefix, "%s│", prefix);
-    
-    // Left branch (include item k)
-    if (s + w[k] <= m) {
-        // Prepare prefix for child node description
-        printf("%s├── x%d=1\n", prefix, k);
-        
-        // Prepare prefix for next level
-        sprintf(new_prefix, "%s│   ", prefix);
-        
-        // Recursive call for left branch
-        x[k] = 1;
-        sumOfSubsetsTree(s + w[k], k + 1, r - w[k], new_prefix);
+    if (node->left != NULL && node->right != NULL) {
+        sprintf(include_prefix, "%s├── x%d=1\n%s│   ", prefix, node->k, prefix);
+        sprintf(exclude_prefix, "%s└── x%d=0\n%s    ", prefix, node->k, prefix);
+    } else if (node->left != NULL) {
+        sprintf(include_prefix, "%s└── x%d=1\n%s    ", prefix, node->k, prefix);
+    } else if (node->right != NULL) {
+        sprintf(exclude_prefix, "%s└── x%d=0\n%s    ", prefix, node->k, prefix);
     }
-    
-    // Right branch (exclude item k)
-    if (s + r - w[k] >= m) {
-        // Prepare prefix for child node description
-        if (s + w[k] <= m) {
-            printf("%s└── x%d=0\n", prefix, k);
+    if (node->left != NULL) {
+        printf("%s├── x%d=1\n", prefix, node->k);
+        char new_prefix[MAX_PREFIX];
+        sprintf(new_prefix, "%s│   ", prefix);
+        printHorizontalTree(node->left, new_prefix);
+    }
+    if (node->right != NULL) {
+        if (node->left != NULL) {
+            printf("%s└── x%d=0\n", prefix, node->k);
+            char new_prefix[MAX_PREFIX];
             sprintf(new_prefix, "%s    ", prefix);
+            printHorizontalTree(node->right, new_prefix);
         } else {
-            printf("%s├── x%d=0\n", prefix, k);
+            printf("%s├── x%d=0\n", prefix, node->k);
+            char new_prefix[MAX_PREFIX];
             sprintf(new_prefix, "%s│   ", prefix);
+            printHorizontalTree(node->right, new_prefix);
         }
-        
-        // Recursive call for right branch
-        x[k] = 0;
-        sumOfSubsetsTree(s, k + 1, r - w[k], new_prefix);
     }
 }
 
-// Function to print all solutions
-void printAllSolutions() {
+void printSolutions() {
     printf("\n\nFinal Solutions:\n");
     printf("=================\n");
-    
-    if (sol_count == 0) {
-        printf("No solutions found for target sum %d\n", m);
+    if (soli == 0) {
+        printf("No solution found.\n");
         return;
     }
-    
-    for (int i = 0; i < sol_count; i++) {
-        printf("Solution %c: {", sol_labels[i]);
+    for (int s = 0; s < soli; s++) {
+        printf("Solution %c: {", sol_labels[s]);
         int first = 1;
-        
         for (int j = 1; j <= n; j++) {
-            if (solutions[i][j] == 1) {
+            if (sol[s][j] == 1) {
                 if (!first) {
                     printf(", ");
                 }
@@ -161,61 +133,47 @@ void printAllSolutions() {
                 first = 0;
             }
         }
-        
         printf("} = %d\n", m);
+        printf("   Binary: ");
+        for (int j = 1; j <= n; j++) {
+            printf("x[%d]=%d ", j, sol[s][j]);
+        }
+        printf("\n");
     }
 }
 
 int main() {
-    // Initialize solution counts and arrays
-    sol_count = 0;
-    for (int i = 0; i < MAX_SOLUTIONS; i++) {
-        solution_items[i] = 0;
-        for (int j = 0; j < MAX_ITEMS; j++) {
-            solutions[i][j] = 0;
-            solution_weights[i][j] = 0;
-        }
-    }
-    
-    printf("Enter number of items: ");
+    int i, j, s;
+    struct timespec start, end;
+    double time_taken;
+    printf("Enter number of elements: ");
     scanf("%d", &n);
-    
-    printf("Enter the weights: ");
-    int total = 0;
-    for (int i = 1; i <= n; i++) {
-        scanf("%d", &w[i]);
-        total += w[i];
-    }
-    
-    printf("Enter the target sum: ");
+    printf("Enter the sum value (m): ");
     scanf("%d", &m);
-    
-    printf("\nSum of Subsets Tree (Target = %d):\n\n", m);
-    
-    // Initialize solution array
-    for (int i = 1; i <= n; i++) {
-        x[i] = 0;
+    printf("Enter %d weights in ascending order: ", n);
+    int sum = 0;
+    for (i = 1; i <= n; i++) {
+        scanf("%d", &w[i]);
+        sum += w[i];
     }
-    
-    // Start with root node
+    w[n + 1] = INF;
+    if (w[1] > m || sum < m) {
+        printf("No possible subsets.\n");
+        return 0;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    struct treeNode* root = SumOfSub(0, 1, sum);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time_taken = (end.tv_sec - start.tv_sec) * 1e9;
+    time_taken = (time_taken + (end.tv_nsec - start.tv_nsec)) / 1e6;
+    printf("\nSum of Subsets Horizontal Tree (Target = %d):\n\n", m);
     char root_info[64];
-    formatNode(root_info, 0, 1, total);
-    printf("%s\n", root_info);
-    
-    // Left branch from root (include first item)
-    if (w[1] <= m) {
-        printf("├── x1=1\n");
-        x[1] = 1;
-        sumOfSubsetsTree(w[1], 2, total - w[1], "│   ");
-    }
-    
-    // Right branch from root (exclude first item)
-    printf("└── x1=0\n");
-    x[1] = 0;
-    sumOfSubsetsTree(0, 2, total - w[1], "    ");
-    
-    // Print all solutions at the end
-    printAllSolutions();
-    
+    formatNodeInfo(root_info, root);
+    printf("%s (Root)\n", root_info);
+    printHorizontalTree(root, "");
+    printSolutions();
+    printf("\nTime Taken: %.6f milliseconds\n", time_taken);
+    printf("Total nodes created: %d\n", nc);
+    freeTree(root);
     return 0;
 }

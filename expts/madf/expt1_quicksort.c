@@ -35,7 +35,7 @@ int partition(int b[], int low, int up, int n, int ascending) {
             interchange(b, i, j);
             print_array(b, n, low, up);
             
-            // Print jth value after interchange
+           
             printf("\nValue at j (index %d): %d\n", j, b[j]);
         }
     }
