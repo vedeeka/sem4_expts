@@ -1,80 +1,3 @@
-// #include <stdio.h>
-
-// #define MAX 100
-
-// int n;                 // Number of items
-// int m;                 // Maximum capacity
-// int p[MAX], w[MAX];    // Profits and Weights
-// int x[MAX], y[MAX];    // Final and Temporary solution
-// int fp = 0, fw = 0;    // Final profit and final weight
-
-// float Bound(int cp, int cw, int k) {
-//     float b = cp;
-//     int c = cw;
-//     for (int i = k + 1; i <= n; i++) {
-//         c += w[i];
-//         if (c <= m) {
-//             b += p[i];
-//         } else {
-//             b += (1 - (float)(c - m) / w[i]) * p[i];
-//             return b;
-//         }
-//     }
-//     return b;
-// }
-
-// void BKnap(int k, int cp, int cw) {
-//     if (cw + w[k] <= m) {
-//         y[k] = 1;
-//         if (k < n)
-//             BKnap(k + 1, cp + p[k], cw + w[k]);
-//         else if (cp + p[k] > fp) {
-//             fp = cp + p[k];
-//             fw = cw + w[k];
-//             for (int j = 1; j <= n; j++)
-//                 x[j] = y[j];
-//         }
-//     }
-
-//     if (Bound(cp, cw, k) > fp) {
-//         y[k] = 0;
-//         if (k < n)
-//             BKnap(k + 1, cp, cw);
-//         else if (cp > fp) {
-//             fp = cp;
-//             fw = cw;
-//             for (int j = 1; j <= n; j++)
-//                 x[j] = y[j];
-//         }
-//     }
-// }
-
-// int main() {
-//     printf("Enter number of items: ");
-//     scanf("%d", &n);
-
-//     printf("Enter max capacity of knapsack: ");
-//     scanf("%d", &m);
-
-//     printf("Enter profits:\n");
-//     for (int i = 1; i <= n; i++)
-//         scanf("%d", &p[i]);
-
-//     printf("Enter weights:\n");
-//     for (int i = 1; i <= n; i++)
-//         scanf("%d", &w[i]);
-
-//     BKnap(1, 0, 0);
-
-//     printf("\nOptimal profit: %d\n", fp);
-//     printf("Optimal weight: %d\n", fw);
-//     printf("Solution vector (0 = exclude, 1 = include):\n");
-//     for (int i = 1; i <= n; i++)
-//         printf("%d ", x[i]);
-//     printf("\n");
-
-//     return 0;
-// }
 #include <stdio.h>
 #include <string.h>
 
@@ -110,6 +33,11 @@ void formatNode(char* buffer, int k, int cp, int cw, float bound) {
     
     // Mark solution nodes
     if (k > n && cp > fp) {
+        strcat(buffer, " solution");
+    }
+    
+    // Mark if this is a solution node
+    if (k > n && cp > fp) {
         strcat(buffer, " (*)");
     }
 }
@@ -136,6 +64,9 @@ void BKnap(int k, int cp, int cw, char* prefix) {
         return;
     }
     
+    // Track if we've pruned due to bound
+    int pruned = 0;
+    
     // Try including the item if possible
     if (cw + w[k] <= m) {
         printf("%s├── x%d=1 (%d)\n", prefix, k, k);
@@ -157,7 +88,8 @@ void BKnap(int k, int cp, int cw, char* prefix) {
         y[k] = 0;
         BKnap(k + 1, cp, cw, new_prefix);
     } else {
-        printf("%s└── Pruned: bound %.2f <= current best %d\n", prefix, bound, fp);
+        pruned = 1;
+        printf("%s└── Pruned: bound %.2f <= current best %d bound\n", prefix, bound, fp);
     }
 }
 
@@ -178,9 +110,6 @@ void printSolution() {
     for (int i = 1; i <= n; i++)
         printf("%d ", x[i]);
     printf("\n\n");
-    
-
-
 }
 
 int main() {

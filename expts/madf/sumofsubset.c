@@ -68,13 +68,24 @@ void freeTree(struct treeNode* node) {
 
 void formatNodeInfo(char* buffer, struct treeNode* node) {
     sprintf(buffer, "[s=%d, k=%d, r=%d]", node->s, node->k, node->r);
+    
+    if (node->s == m) {
+        strcat(buffer, " solution");
+    }
+    
+    // Add bound label when a branch is bounded (no children due to constraints)
+    if ((node->left == NULL && node->right == NULL) && (node->s != m)) {
+        strcat(buffer, " bound");
+    }
+    
     if (node->s == m) {
         char solution_mark[10];
         sprintf(solution_mark, " (%c)", sol_labels[node->id % 26]);
         strcat(buffer, solution_mark);
     }
-}
 
+
+}
 void printHorizontalTree(struct treeNode* node, char* prefix) {
     if (node == NULL) return;
     char node_info[64];
@@ -150,7 +161,7 @@ int main() {
     scanf("%d", &n);
     printf("Enter the sum value (m): ");
     scanf("%d", &m);
-    printf("Enter %d weights in ascending order: ", n);
+    printf("Enter %d weights in  order: ", n);
     int sum = 0;
     for (i = 1; i <= n; i++) {
         scanf("%d", &w[i]);

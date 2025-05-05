@@ -1,5 +1,3 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,12 +11,13 @@ int n, m; // n = number of vertices, m = number of colors
 int G[MAX_VERTICES+1][MAX_VERTICES+1], x[MAX_VERTICES+1];
 int solutionCount = 0;
 int solutions[MAX_SOLUTIONS][MAX_VERTICES+1];
+int chromatic_number = -1; // Will store the minimum number of colors needed
 
 // Structure to represent a node in the state space tree
 typedef struct Node {
     int vertex;         // Which vertex this node represents (1 to n)
     int color;          // Color assigned (1 to m or 0 for initial)
-    int valid;          // 1 if valid assignment, 0 if invalid (pruned)
+    int valid;          // 1 if valid assignment, 0 if invalid (bound)
     int childCount;     // Number of children
     struct Node* children[MAX_COLORS+1]; // Children nodes
 } Node;
@@ -69,7 +68,7 @@ void buildStateSpaceTree(Node* node, int k) {
             // Recursively build for next vertex
             buildStateSpaceTree(child, k + 1);
         } else {
-            // Invalid assignment, mark as pruned
+            // Invalid assignment, mark as bound
             child->valid = 0;
             node->children[node->childCount++] = child;
         }
@@ -99,9 +98,13 @@ void printTreeNode(Node* node, int depth, char* prefix, int isLast) {
         }
         
         if (node->valid) {
-            printf("x%d=%d\n", node->vertex, node->color);
+            if (node->vertex == n) {
+                printf("x%d=%d solution\n", node->vertex, node->color);
+            } else {
+                printf("x%d=%d\n", node->vertex, node->color);
+            }
         } else {
-            printf("x%d=%d (pruned - invalid)\n", node->vertex, node->color);
+            printf("x%d=%d bound\n", node->vertex, node->color);
         }
     }
     
@@ -124,6 +127,62 @@ void printSolutions() {
     }
 }
 
+// Recursive function to check if graph can be colored with given colors
+int mColoringCheck(int k, int colors) {
+    if (k > n) {
+        return 1; // Successfully colored all vertices
+    }
+    
+    // Try all colors
+    for (int c = 1; c <= colors; c++) {
+        // Check if color c can be assigned to vertex k
+        int valid = 1;
+        for (int j = 1; j <= n; j++) {
+            if (G[k][j] != 0 && c == x[j]) {
+                valid = 0;
+                break;
+            }
+        }
+        
+        if (valid) {
+            x[k] = c;
+            if (mColoringCheck(k + 1, colors)) {
+                return 1;
+            }
+            x[k] = 0; // Backtrack
+        }
+    }
+    
+    return 0; // No valid coloring with this number of colors
+}
+
+// Function to find chromatic number (minimum number of colors)
+int findChromaticNumber() {
+    // Start with 1 color and increment until a valid coloring is found
+    for (int colors = 1; colors <= n; colors++) {
+        // Reset coloring
+        for (int i = 1; i <= n; i++) {
+            x[i] = 0;
+        }
+        
+        if (mColoringCheck(1, colors)) {
+            return colors; // Return minimum number of colors needed
+        }
+    }
+    
+    return n; // Worst case: every vertex needs a different color
+}
+
+void freeTree(Node* node) {
+    if (node == NULL) return;
+    
+    for (int i = 0; i < node->childCount; i++) {
+        freeTree(node->children[i]);
+    }
+    
+    free(node);
+}
+
 int main() {
     printf("Enter number of vertices: ");
     scanf("%d", &n);
@@ -135,8 +194,13 @@ int main() {
         }
     }
     
-    printf("Enter number of colors: ");
-    scanf("%d", &m);
+    // Find chromatic number automatically
+    chromatic_number = findChromaticNumber();
+    printf("\nChromatic number of the graph: %d\n", chromatic_number);
+    
+    // Use chromatic number as the number of colors
+    m = chromatic_number;
+    printf("Using %d colors for coloring.\n", m);
     
     // Initialize
     for (int i = 1; i <= n; i++) {
@@ -156,69 +220,8 @@ int main() {
     // Print solutions
     printSolutions();
     
+    // Free memory
+    freeTree(root);
+    
     return 0;
-
-
-
 }
-// #include <stdio.h>
-
-// int n, m; // n = number of vertices, m = number of colors
-// int G[10][10], x[10];
-
-// void NextValue(int k) {
-//     int j;
-//     do {
-//         x[k] = (x[k] + 1) % (m + 1);
-//         if (x[k] == 0)
-//             return;
-
-//         for (j = 1; j <= n; j++) {
-//             if (G[k][j] != 0 && x[k] == x[j])
-//                 break;
-//         }
-
-//         if (j == n + 1)
-//             return;
-//     } while (1);
-// }
-
-// void mColoring(int k) {
-//     do {
-//         NextValue(k);
-//         if (x[k] == 0)
-//             return;
-
-//         if (k == n) {
-//             printf("Solution: ");
-//             for (int i = 1; i <= n; i++)
-//                 printf("%d ", x[i]);
-//             printf("\n");
-//         } else {
-//             mColoring(k + 1);
-//         }
-//     } while (1);
-// }
-
-// int main() {
-//     printf("Enter number of vertices: ");
-//     scanf("%d", &n);
-
-//     printf("Enter the adjacency matrix:\n");
-//     for (int i = 1; i <= n; i++) {
-//         for (int j = 1; j <= n; j++) {
-//             scanf("%d", &G[i][j]);
-//         }
-//     }
-
-//     printf("Enter number of colors: ");
-//     scanf("%d", &m);
-
-//     for (int i = 1; i <= n; i++)
-//         x[i] = 0;
-
-//     printf("All possible solutions are:\n");
-//     mColoring(1);
-
-//     return 0;
-// }
