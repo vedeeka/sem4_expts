@@ -144,7 +144,6 @@ int main() {
     // Build tree from vertex 2 onwards
     HAMILTONIAN(2, "");
 
-    // Print all cycles at the end
     printAllCycles();
 
     return 0;
