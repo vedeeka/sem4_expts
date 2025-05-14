@@ -130,8 +130,8 @@ void printPathWithNumbers(char* X, char* Y, LCSResult result, int n, int m) {
                 const char* arrow = " ";
                 if (i > 0 && j > 0) {
                     switch(result.path[i][j]) {
-                        case DIAG: arrow = "←"; break;  // Using diagonal arrow
-                        case LEFT: arrow = "<-"; break;   // Using left arrow
+                        case DIAG: arrow = "↖"; break;  // Using diagonal arrow
+                        case LEFT: arrow = "←"; break;   // Using left arrow
                         case UP:   arrow = "↑"; break;   // Using up arrow
                     }
                 }
@@ -177,8 +177,13 @@ void printLCS(char* X, char* Y, LCSResult result, int n, int m) {
 
 // Main function
 int main() {
-    char X[] = "GCTAGTTACG";
-    char Y[] = "ATGACTAAGCCTAGT";
+    char X[100], Y[100];
+    printf("Enter string X: ");
+    fgets(X, sizeof(X), stdin);
+    X[strcspn(X, "\n")] = '\0';
+    printf("Enter string Y: ");
+    fgets(Y, sizeof(Y), stdin);
+    Y[strcspn(Y, "\n")] = '\0';
 
     int n = strlen(X);
     int m = strlen(Y);
