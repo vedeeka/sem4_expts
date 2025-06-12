@@ -100,7 +100,7 @@ int main() {
     }
 
     printf("Array transformations during selection:");
- clock_t t; 
+    clock_t t; 
     t = clock();
     select(a, n, k);
         t = clock() - t;
@@ -108,7 +108,7 @@ int main() {
     double time_taken = ((double)t)/CLOCKS_PER_SEC; 
 
     printf("\n\nThe %dth largest element is: %s\n", k, a[k - 1]);
-        printf("select fun() took %f seconds to execute \n", time_taken);  
+    printf("select fun() took %f seconds to execute \n", time_taken);  
     for (int h = 0; h < n; h++) {
         free(a[h]);
     }

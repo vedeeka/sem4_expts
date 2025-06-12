@@ -1,106 +1,121 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#define MAX 256
 
-#define MAX_CHAR 256
-
-void computeLast(char *P, int last[]) {
-    for (int i = 0; i < MAX_CHAR; i++) {
+void lastOccurence(char *P, int m, int last[]) {
+    int i;
+    for (i = 0; i < MAX; i++)
         last[i] = -1;
-    }
-    for (int i = 0; P[i] != '\0'; i++) {
-        last[(int)P[i]] = i;
-    }
+    for (i = 0; i < m; i++)
+        last[(unsigned char)P[i]] = i;
 }
 
-void printWithHighlight(char *text, int start, int end, int highlight_start, int highlight_end) {
-    printf("|");
-    for (int i = start; i <= end; i++) {
-        if (i >= highlight_start && i <= highlight_end) {
-            printf(" %c |", text[i]);
-        } else {
-            printf(" %c |", text[i]);
-        }
-    }
-    printf("\n");
+void printT(char *T) {
+    int n = strlen(T), i;
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("%3d ", i);
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("----");
+    printf("-\nT = |");
+    for (i = 0; i < n; i++)
+        printf(" %c |", T[i]);
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("----");
+    printf("-\n\n");
 }
 
-int BM_Match(char *T, char *P) {
-    int n = strlen(T);
+void printP(char *P, int shift, int i, int j, int l, int comp, int *cc) {
     int m = strlen(P);
-    int last[MAX_CHAR];
-    int step = 1;
+    int s, k;
 
-    computeLast(P, last);
+    for (s = 0; s < shift * 4 + 4; s++) printf(" ");
+    for (k = 0; k < m; k++) printf("%3d ", k);
+    printf("\n");
 
-    printf("Last occurrence table:\n");
-    for (int ch = 'a'; ch <= 'z'; ch++) {
-        if (last[ch] != -1) {
-            printf("last['%c'] = %d\n", ch, last[ch]);
-        }
+    for (s = 0; s < shift * 4 + 4; s++) printf(" ");
+    for (k = 0; k < m; k++) printf("----");
+    printf("-\n");
+
+    for (s = 0; s < shift * 4; s++) printf(" ");
+    printf("P = |");
+    for (k = 0; k < m; k++) printf(" %c |", P[k]);
+    printf("\t\t i = %d    j = %d    l = %d\n", i, j, l);
+
+    for (s = 0; s < shift * 4 + 4; s++) printf(" ");
+    for (k = 0; k < m; k++) printf("----");
+    printf("-\n");
+
+    int rpos = shift * 4 + 4 + j * 4;
+    int nums[comp];
+    for (k = 0; k < comp; k++)
+        nums[k] = ++(*cc);
+
+    for (s = 0; s < rpos; s++) printf(" ");
+    for (k = comp - 1; k >= 0; k--) {
+        printf("%3d ", nums[k]);
     }
-    printf("\n");
+    printf ("\n\n");
+}
 
-    printf("Text: ");
-    printWithHighlight(T, 0, n - 1, -1, -1);
-    printf("\n");
+int BMMatch(char *T, char *P) {
+    int n = strlen(T), m = strlen(P);
+    int last[MAX], tc = 0, cc = 0;
+    int s, j, comp, l;
 
-    int i = m - 1;
-    int j = m - 1;
+    lastOccurence(P, m, last);
+    printT(T);
+    s = 0; 
 
-    while (i <= n - 1) {
-        printf("Step %d:\n", step++);
-
-        printf("      ");
-        for (int k = 0; k < i - j; k++) {
-            printf("    ");
-        }
-        printWithHighlight(P, 0, m - 1, j, j);
-
-        while (P[j] == T[i]) {
-            if (j == 0) {
-                printf("      ");
-                for (int k = 0; k < i; k++) 
-                    printf("    ");
-                printWithHighlight(P, 0, m - 1, 0, m - 1);
-                printf("Match found at position %d.\n", i);
-                return i;
-            }
-            i--;
+    while (s <= n - m) {
+        j = m - 1;
+        comp = 0;
+        while (j >= 0 && P[j] == T[s + j]) {
+            comp++;
             j--;
         }
-
-        int l = last[(int)T[i]];
-        int shift = m - ((j < 1 + l) ? j : 1 + l);
-        printf("i = %d, j = %d, last['%c'] = %d, shift = %d\n", i, j, T[i], l, shift);
-        i = i + shift;
-        j = m - 1;
-
-        printf("\n");
+        l = last[(unsigned char)T[s + m - 1]];
+        if (j < 0) {
+            printP(P, s, s + j + 1, j + 1, l, comp, &cc);
+            tc += comp;
+            printf("Total number of comparisons = %d\n", tc);
+            return s;
+        } else {
+            comp++;
+            l = last[(unsigned char)T[s + j]];
+            printP(P, s, s + j, j, l, comp, &cc);
+            s += (j - l > 0) ? j - l : 1;
+            tc += comp;
+        }
     }
-
+    printf("Total number of comparisons = %d\n", tc);
     return -1;
 }
 
 int main() {
-    char text[100], pattern[100];
-    printf("Enter the text: ");
-    fgets(text, sizeof(text), stdin);
-    text[strcspn(text, "\n")] = '\0';
+    char T[100], P[100];
+    struct timespec start, end;
+    double time_taken;
 
-    printf("Enter the pattern: ");
-    fgets(pattern, sizeof(pattern), stdin);
-    pattern[strcspn(pattern, "\n")] = '\0';
+    printf("Enter the text T: ");
+    scanf("%s", T);
+    printf("Enter the pattern P: ");
+    scanf("%s", P);
+	
+	clock_gettime(CLOCK_MONOTONIC, &start);
+    int index = BMMatch(T, P);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    
+    time_taken = (end.tv_sec - start.tv_sec) * 1e9;
+    time_taken = (time_taken + (end.tv_nsec - start.tv_nsec)) / 1e6;
 
-    printf("\nText: %s\n", text);
-    printf("Pattern: %s\n\n", pattern);
-
-    int pos = BM_Match(text, pattern);
-
-    if (pos != -1) {
-        return 0;
-    } else {
-        printf("There is no substring of T matching P.\n");
-    }
-
-    return 0;
+    if (index != -1)
+        printf("Pattern found at index %d\n", index);
+    else
+        printf("Pattern not found.\n");
+	
+	printf("\nTime Taken: %.6f milliseconds\n", time_taken);
 }

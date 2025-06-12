@@ -1,213 +1,278 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define MAX 256
+#include <time.h>
 
-#define MAX_TREE_HT 100
-#define MAX_CHAR 256
+typedef struct Node {
+    char ch;
+    int freq;
+    struct Node *left, *right;
+    int l;          // leaf flag (1 if leaf)
+    int order;      // original order
+    int tn;         // tree node number
+} Node;
 
-struct MinHeapNode {
-    char data;
-    unsigned freq;
-    struct MinHeapNode *left, *right;
-};
+typedef struct {
+    Node* data[MAX];
+    int size;
+} PQ;
 
-struct MinHeap {
-    unsigned size;
-    unsigned capacity;
-    struct MinHeapNode **array;
-};
+int freq[MAX] = {0}, oc = 0, tc = 1;
 
-struct MinHeapNode* newNode(char data, unsigned freq) {
-    struct MinHeapNode* temp = (struct MinHeapNode*) malloc(sizeof(struct MinHeapNode));
-    temp->left = temp->right = NULL;
-    temp->data = data;
-    temp->freq = freq;
-    return temp;
+// Create a new node
+Node* createN(char ch, int freq, int l) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->ch = ch;
+    node->freq = freq;
+    node->left = node->right = NULL;
+    node->l = l;
+    node->order = oc++;
+    node->tn = 0;
+    return node;
 }
 
-struct MinHeap* createMinHeap(unsigned capacity) {
-    struct MinHeap* minHeap = (struct MinHeap*) malloc(sizeof(struct MinHeap));
-    minHeap->size = 0;
-    minHeap->capacity = capacity;
-    minHeap->array = (struct MinHeapNode**) malloc(minHeap->capacity * sizeof(struct MinHeapNode*));
-    return minHeap;
+// Initialize priority queue
+void initQueue(PQ* q) {
+    q->size = 0;
 }
 
-int compareNodes(struct MinHeapNode* a, struct MinHeapNode* b) {
+// Compare nodes for priority queue
+int compare(Node* a, Node* b) {
     if (a->freq != b->freq)
-        return a->freq - b->freq;  // Sort by frequency
-    return a->data - b->data;  // If frequencies are the same, sort alphabetically
+        return a->freq - b->freq;
+    if (a->l && b->l)
+        return a->ch - b->ch;
+    if (a->l != b->l)
+        return a->l ? -1 : 1;
+    return a->order - b->order;
 }
 
-void swapMinHeapNode(struct MinHeapNode** a, struct MinHeapNode** b) {
-    struct MinHeapNode* t = *a;
-    *a = *b;
-    *b = t;
-}
-
-void minHeapify(struct MinHeap* minHeap, int idx) {
-    int smallest = idx;
-    int left = 2 * idx + 1;
-    int right = 2 * idx + 2;
-
-    if (left < minHeap->size && compareNodes(minHeap->array[left], minHeap->array[smallest]) < 0)
-        smallest = left;
-
-    if (right < minHeap->size && compareNodes(minHeap->array[right], minHeap->array[smallest]) < 0)
-        smallest = right;
-
-    if (smallest != idx) {
-        swapMinHeapNode(&minHeap->array[smallest], &minHeap->array[idx]);
-        minHeapify(minHeap, smallest);
+// Insert node into priority queue
+void insertQ(PQ* q, Node* node) {
+    int i = q->size++;
+    while (i > 0 && compare(node, q->data[(i - 1) / 2]) < 0) {
+        q->data[i] = q->data[(i - 1) / 2];
+        i = (i - 1) / 2;
     }
+    q->data[i] = node;
 }
 
-int isSizeOne(struct MinHeap* minHeap) {
-    return (minHeap->size == 1);
-}
-
-struct MinHeapNode* extractMin(struct MinHeap* minHeap) {
-    struct MinHeapNode* temp = minHeap->array[0];
-    minHeap->array[0] = minHeap->array[--minHeap->size];
-    minHeapify(minHeap, 0);
-    return temp;
-}
-
-void insertMinHeap(struct MinHeap* minHeap, struct MinHeapNode* minHeapNode) {
-    ++minHeap->size;
-    int i = minHeap->size - 1;
-
-    while (i && compareNodes(minHeapNode, minHeap->array[(i - 1)/2]) < 0) {
-        minHeap->array[i] = minHeap->array[(i - 1)/2];
-        i = (i - 1)/2;
+// Remove minimum node from priority queue
+Node* removeMin(PQ* q) {
+    Node* min = q->data[0];
+    Node* last = q->data[--q->size];
+    int i = 0, child;
+    while (i * 2 + 1 < q->size) {
+        child = i * 2 + 1;
+        if (child + 1 < q->size && compare(q->data[child + 1], q->data[child]) < 0)
+            child++;
+        if (compare(last, q->data[child]) <= 0)
+            break;
+        q->data[i] = q->data[child];
+        i = child;
     }
-
-    minHeap->array[i] = minHeapNode;
+    q->data[i] = last;
+    return min;
 }
 
-void buildMinHeap(struct MinHeap* minHeap) {
-    int n = minHeap->size - 1;
-    for (int i = (n - 1)/2; i >= 0; --i)
-        minHeapify(minHeap, i);
-}
-
-struct MinHeap* createAndBuildMinHeap(char data[], int freq[], int size) {
-    struct MinHeap* minHeap = createMinHeap(size);
-    for (int i = 0; i < size; ++i)
-        minHeap->array[i] = newNode(data[i], freq[i]);
-    minHeap->size = size;
-    buildMinHeap(minHeap);
-    return minHeap;
-}
-
-void printPriorityQueue(struct MinHeap* minHeap) {
-    printf("Priority Queue: [");
-    for (int i = 0; i < minHeap->size; i++) {
-        if (minHeap->array[i]->data == ' ')
-            printf("space(%d)", minHeap->array[i]->freq);
+// Improved tree visualization with better formatting
+void printTree(Node* root, int depth) {
+    if (!root) return;
+    
+    // Process right subtree first (will appear at top)
+    printTree(root->right, depth + 1);
+    
+    // Print current node with proper indentation
+    char buffer[100] = {0};
+    for (int i = 0; i < depth; i++)
+        strcat(buffer, "    ");
+    
+    if (root->l) {
+        // Leaf node with character
+        if (root->ch == ' ')
+            printf("%s├── (%d) 'space'\n", buffer, root->freq);
+        else if (root->ch == '\n')
+            printf("%s├── (%d) '\\n'\n", buffer, root->freq);
+        else if (root->ch == '\t')
+            printf("%s├── (%d) '\\t'\n", buffer, root->freq);
         else
-            printf("%c(%d)", minHeap->array[i]->data, minHeap->array[i]->freq);
-        if (i != minHeap->size - 1)
-            printf(", ");
-    }
-    printf("]\n");
-}
-
-struct MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
-    struct MinHeapNode *left, *right, *top;
-    struct MinHeap* minHeap = createAndBuildMinHeap(data, freq, size);
-
-    while (!isSizeOne(minHeap)) {
-        left = extractMin(minHeap);
-        right = extractMin(minHeap);
-
-        top = newNode('$', left->freq + right->freq);
-        top->left = left;
-        top->right = right;
-
-        insertMinHeap(minHeap, top);
-    }
-
-    return extractMin(minHeap);
-}
-
-void printCodes(struct MinHeapNode* root, int arr[], int top) {
-    if (root->left) {
-        arr[top] = 0;
-        printCodes(root->left, arr, top + 1);
-    }
-
-    if (root->right) {
-        arr[top] = 1;
-        printCodes(root->right, arr, top + 1);
-    }
-
-    if (!(root->left) && !(root->right)) {
-        if (root->data == ' ')
-            printf("space : ");
-        else
-            printf("  %c   : ", root->data);
-        for (int i = 0; i < top; ++i)
-            printf("%d", arr[i]);
+            printf("%s├── (%d) '%c'\n", buffer, root->freq, root->ch);
+    } else {
+        // Internal node
+        printf("%s├── (%d)", buffer, root->freq);
+        if (root->tn > 0)
+            printf(" Tree-%d", root->tn);
         printf("\n");
     }
+    
+    // Process left subtree (will appear at bottom)
+    printTree(root->left, depth + 1);
 }
 
-void calculateFrequencies(char input[], int freq[], char chars[], int* distinct) {
-    int count[MAX_CHAR] = {0};
-    for (int i = 0; input[i] != '\0'; i++)
-        count[(unsigned char)input[i]]++;
-
-    *distinct = 0;
-    for (int i = 0; i < MAX_CHAR; i++) {
-        if (count[i] > 0) {
-            chars[*distinct] = (char)i;
-            freq[*distinct] = count[i];
-            (*distinct)++;
-        }
+// Improved queue display
+void printQ(PQ* q) {
+    // Sort queue elements for display
+    Node* temp[MAX];
+    for (int i = 0; i < q->size; i++) {
+        temp[i] = q->data[i];
     }
-}
-
-int main() {
-    char input[1000];
-    printf("Enter input string: ");
-    scanf(" %[^\n]", input);
-
-    int freq[MAX_CHAR], distinct = 0;
-    char chars[MAX_CHAR];
-
-    calculateFrequencies(input, freq, chars, &distinct);
-
-    // Sorting frequencies and characters based on frequency and alphabetical order
-    for (int i = 0; i < distinct - 1; i++) {
-        for (int j = i + 1; j < distinct; j++) {
-            if (freq[i] > freq[j] || (freq[i] == freq[j] && chars[i] > chars[j])) {
-                // Swap frequencies
-                int tempFreq = freq[i];
-                freq[i] = freq[j];
-                freq[j] = tempFreq;
-
-                // Swap characters
-                char tempChar = chars[i];
-                chars[i] = chars[j];
-                chars[j] = tempChar;
+    
+    for (int i = 0; i < q->size - 1; i++) {
+        for (int j = i + 1; j < q->size; j++) {
+            if (compare(temp[i], temp[j]) > 0) {
+                Node* t = temp[i];
+                temp[i] = temp[j];
+                temp[j] = t;
             }
         }
     }
-
-    printf("\nCharacter Frequencies (sorted by frequency and alphabetical order):\n");
-    for (int i = 0; i < distinct; i++) {
-        if (chars[i] == ' ')
-            printf("space : %d\n", freq[i]);
-        else
-            printf("  %c   : %d\n", chars[i], freq[i]);
+    
+    // Header for queue display
+    printf("\n┌─── Priority Queue ───────────────────────┐\n");
+    printf("│ Node  | ");
+    
+    // Print node identifiers
+    for (int i = 0; i < q->size; i++) {
+        if (temp[i]->l) {
+            if (temp[i]->ch == ' ')
+                printf("space ");
+            else if (temp[i]->ch == '\n')
+                printf("\\n    ");
+            else if (temp[i]->ch == '\t')
+                printf("\\t    ");
+            else
+                printf("'%c'   ", temp[i]->ch);
+        } else {
+            printf("T%-2d   ", temp[i]->tn);
+        }
     }
+    printf("\n│ Freq  | ");
+    
+    // Print frequencies
+    for (int i = 0; i < q->size; i++) {
+        printf("%-6d", temp[i]->freq);
+    }
+    printf("\n└───────────────────────────────────────────┘\n");
+}
 
-    struct MinHeapNode* root = buildHuffmanTree(chars, freq, distinct);
+// Generate Huffman codes
+void generateHuffmanCodes(Node* root, char* code, int depth, char codes[MAX][MAX]) {
+    if (!root) return;
+    
+    if (root->l) {
+        code[depth] = '\0';
+        strcpy(codes[(unsigned char)root->ch], code);
+        return;
+    }
+    
+    code[depth] = '0';
+    generateHuffmanCodes(root->left, code, depth + 1, codes);
+    
+    code[depth] = '1';
+    generateHuffmanCodes(root->right, code, depth + 1, codes);
+}
 
-    int arr[MAX_TREE_HT], top = 0;
-    printf("\nHuffman Codes:\n");
-    printCodes(root, arr, top);
+// Build Huffman tree
+Node* buildHuffmanTree(char* str) {
+    PQ q;
+    initQueue(&q);
+    
+    // Count character frequencies
+    for (int i = 0; str[i]; i++)
+        freq[(unsigned char)str[i]]++;
 
+    // Create leaf nodes for each character
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            Node* node = createN((char)i, freq[i], 1);
+            insertQ(&q, node);
+        }
+    }
+    
+    printf("\n✧ INITIAL CHARACTER FREQUENCIES ✧\n");
+    printQ(&q);
+    printf("\n══════════════════════════════════════════════\n");
+    
+    // Build the Huffman tree
+    int step = 1;
+    while (q.size > 1) {
+        Node* t1 = removeMin(&q);
+        Node* t2 = removeMin(&q);
+        
+        Node* newNode = createN('\0', t1->freq + t2->freq, 0);
+        newNode->left = t1;
+        newNode->right = t2;
+        newNode->tn = tc++;
+        
+        printf("\n✧ STEP %d: Combining nodes (freq: %d + %d = %d) ✧\n", 
+               step++, t1->freq, t2->freq, newNode->freq);
+        printf("\nTree-%d Structure:\n", newNode->tn);
+        printTree(newNode, 0);
+        
+        insertQ(&q, newNode);
+        printQ(&q);
+        printf("\n══════════════════════════════════════════════\n");
+    }
+    
+    return removeMin(&q);
+}
+
+int main() {
+    char str[1000], codes[MAX][MAX] = {{0}}, buffer[MAX];
+    
+    printf("╔═══════════════════════════════════════╗\n");
+    printf("║        HUFFMAN CODING PROGRAM         ║\n");
+    printf("╚═══════════════════════════════════════╝\n");
+    
+    printf("\nEnter the input string: ");
+    scanf("%[^\n]", str);
+    
+    printf("\n✧ BUILDING HUFFMAN TREE ✧\n");
+    Node* root = buildHuffmanTree(str);
+    
+    // Generate codes
+    generateHuffmanCodes(root, buffer, 0, codes);
+    
+    // Calculate original and compressed sizes
+    int originalSize = strlen(str) * 8;
+    int compressedSize = 0;
+    
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            compressedSize += freq[i] * strlen(codes[i]);
+        }
+    }
+    
+    // Print the final Huffman codes table
+    printf("\n✧ FINAL HUFFMAN CODES ✧\n");
+    printf("┌────────────┬────────────┬────────────┐\n");
+    printf("│ Character  │ Frequency  │ Code       │\n");
+    printf("├────────────┼────────────┼────────────┤\n");
+    
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            printf("│ ");
+            if (i == ' ')
+                printf("space      ");
+            else if (i == '\n')
+                printf("\\n         ");
+            else if (i == '\t')
+                printf("\\t         ");
+            else
+                printf("'%c'         ", i);
+                
+            printf("│ %-10d │ %-10s │\n", freq[i], codes[i]);
+        }
+    }
+    printf("├────────────┼────────────┼────────────┤\n");
+    printf("│ TOTAL      │ %-10d │            │\n", strlen(str));
+    printf("└────────────┴────────────┴────────────┘\n");
+    
+    // Print compression statistics
+    float compressionRatio = (float)originalSize / compressedSize;
+    
+
+    
     return 0;
 }

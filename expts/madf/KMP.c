@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#define MAX 1000
 
-#define MAX 100
-
-void computeFailureFunction(char *P, int f[]) {
-    int m = strlen(P);
-    int i = 1, j = 0;
-
+void KMPFailureFunction(char P[], int f[]) {
+    int m = strlen(P), i = 1, j = 0;
     f[0] = 0;
-
     while (i < m) {
-        if (P[j] == P[i]) {
+        if (P[i] == P[j]) {
             f[i] = j + 1;
             i++;
             j++;
@@ -23,94 +20,102 @@ void computeFailureFunction(char *P, int f[]) {
     }
 }
 
-
-void printWithHighlight(char *text, int start, int end, int highlight_start, int highlight_end) {
-    printf("|");
-    for (int i = start; i <= end; i++) {
-        if (i >= highlight_start && i <= highlight_end) {
-            printf(" %c* |", text[i]);
-        } else {
-            printf(" %c |", text[i]);
-        }
-    }
-    printf("\n");
+void printT(char T[]) {
+    int n = strlen(T), i;
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("%3d ", i);
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("----");
+    printf("-\nT = |");
+    for (i = 0; i < n; i++)
+        printf(" %c |", T[i]);
+    printf("\n    ");
+    for (i = 0; i < n; i++)
+        printf("----");
+    printf("-\n\n");
 }
 
-int KMP_Match(char *T, char *P) {
-    int n = strlen(T);
-    int m = strlen(P);
-    int f[MAX];
-    int step = 1;
+void printP(char P[], int pos, int i, int j, int tempi, int tempj, int comp, int *cc) {
+    int m = strlen(P), k;
+    int tc = comp - (*cc);
 
-    computeFailureFunction(P, f);
+    for (k = 0; k < pos * 4 + 4; k++) printf(" ");
+    for (k = 0; k < m; k++) printf("%3d ", k);
+    printf("\t\ti = %-5d j = %-5d\n", tempi, tempj);
 
-    printf("Failure function:\n");
-    for (int i = 0; i < m; i++) {
-        printf("f[%d] = %d\n", i, f[i]);
-    }
-    printf("\nText: ");
-    printWithHighlight(T, 0, n - 1, -1, -1);
-    printf("\n");
+    for (k = 0; k < pos * 4 + 4; k++) printf(" ");
+    for (k = 0; k < m; k++) printf("----");
+    printf("-\n");
 
-    int i = 0, j = 0;
+    for (k = 0; k < pos * 4; k++) printf(" ");
+    printf("P = |");
+    for (k = 0; k < m; k++) printf(" %c |", P[k]);
+    printf("\t\ti = %-5d j = %-5d\n", i, j);
+
+    for (k = 0; k < pos * 4 + 4; k++) printf(" ");
+    for (k = 0; k < m; k++) printf("----");
+    printf("-\n");
+
+    for (k = 0; k < pos * 4 + 4 + tempj * 4; k++) printf(" ");
+	for (k = 0; k < tc; k++)
+    	printf("%3d ", ++(*cc));
+    printf ("\n\n");
+}
+
+int KMPMatch(char T[], char P[]) {
+    int n = strlen(T), m = strlen(P), f[MAX];
+    int i = 0, j = 0, comp = 0, cc = 0, tempi = 0, tempj = 0;
+
+    KMPFailureFunction(P, f);
+    printT(T);
+
     while (i < n) {
-        if (T[i] == P[j]) {
-            i++;
-            j++;
-            if (j == m) {
-                // Print step and match alignment only once, when match is complete
-                printf("Step %d:\n", step++);
-                printf("i = %d, j = %d\n", i, j);
-                printf("      ");
-                for (int k = 0; k < i - j; k++) {
-                    printf("    ");
-                }
-                printWithHighlight(P, 0, m - 1, 0, m - 1);
-                printf("Match found at position %d.\n", i - m);
-                return i - m;
-            }
-        } else {
-            printf("Step %d:\n", step++);
-            printf("i = %d, j = %d\n", i, j);
-            printf("      ");
-            for (int k = 0; k < i - j; k++) {
-                printf("    ");
-            }
-            printWithHighlight(P, 0, m - 1, j, j);
-
-            if (j != 0) {
-               
-                j = f[j - 1];
-            } else {
-                
-                i++;
-            }
-            printf("\n");
-        }
+    	if (T[i] == P[j]) {
+        	if (j == m - 1) {
+        		comp++;	
+        		printP(P, i - j, i, j, tempi, tempj, comp, &cc);
+            	printf("Pattern found at index %d\n", i - m + 1);
+            	printf("Total number of comparisons = %d\n", comp);
+            	return i - m + 1;
+        	} else {
+        		comp++;
+        		i++;
+        		j++;
+			}
+    	} else {
+    		comp++;
+    		printP(P, i - j, i, j, tempi, tempj, comp, &cc);
+        	if (j > 0)
+           		j = f[j - 1];
+        	else
+           		i++;
+           	tempi = i;
+			tempj = j;
+		}	
     }
-
+	printf("There is no substring of T matching P.\n");
+    printf("Total number of comparisons = %d\n", comp);
     return -1;
 }
 
-
 int main() {
     char text[MAX], pattern[MAX];
+    struct timespec start, end;
+    double time_taken;
+    
     printf("Enter the text: ");
-    fgets(text, sizeof(text), stdin);
-    text[strcspn(text, "\n")] = '\0';
-
+    scanf("%s", text);
     printf("Enter the pattern: ");
-    fgets(pattern, sizeof(pattern), stdin);
-    pattern[strcspn(pattern, "\n")] = '\0';
-
-    printf("\nText: %s\n", text);
-    printf("Pattern: %s\n\n", pattern);
-
-    int pos = KMP_Match(text, pattern);
-
-    if (pos == -1) {
-        printf("There is no substring of T matching P.\n");
-    }
-
-    return 0;
+    scanf("%s", pattern);
+	
+	clock_gettime(CLOCK_MONOTONIC, &start);
+    KMPMatch(text, pattern);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    
+    time_taken = (end.tv_sec - start.tv_sec) * 1e9;
+    time_taken = (time_taken + (end.tv_nsec - start.tv_nsec)) / 1e6;
+    
+    printf("\nTime Taken: %.6f milliseconds\n", time_taken);
 }

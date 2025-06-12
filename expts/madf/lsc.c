@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <time.h>
 // Define direction constants
 #define DIAG 0  // '\' (will use this character for diagonal)
 #define LEFT 1  // '<' (will use this character for left)
@@ -184,7 +184,8 @@ int main() {
     printf("Enter string Y: ");
     fgets(Y, sizeof(Y), stdin);
     Y[strcspn(Y, "\n")] = '\0';
-
+    clock_t t; 
+    t = clock();
     int n = strlen(X);
     int m = strlen(Y);
 
