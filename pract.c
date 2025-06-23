@@ -9,30 +9,34 @@ typedef struct {
 
 Pair pair[MAX];   // Array to store profit-weight pairs
 int b[MAX];       // Boundary markers for each Si
-int next;         // Next free position in pair[]
+int next;  
+
 
 int Largest(Pair pair[], int w[], int t, int h, int i, int m) {
-    for (int j = h; j >= t; j--) {
-        if (pair[j].w + w[i] <= m)
+    for(int j=h;j>=t;j--){
+        if(pair[j].w+w[i]<=m){
             return j;
+        }
     }
-    return t - 1;
+    return t-1;
+
 }
 
 void DKnap(int p[], int w[], int n, int m) {
-    // Initialization
-    pair[1].p = 0;
-    pair[1].w = 0;
-    b[0] = 1;
-    next = 2;
-    b[1] = next;
+    pair[1].w=0;
+    pair[1].p=0;
+     b[0]=0;
+    int next=2;
+    b[1]=next;
 
-    int t = 1, h = 1;
 
-    for (int i = 1; i <= n; i++) {
+    int h,t=1;
+
+    for(int i=1;i<=n;i++){
         int k = t;
         int u = Largest(pair, w, t, h, i, m);
         int start = next;
+
 
         for (int j = t; j <= u; j++) {
             int pp = pair[j].p + p[i];
@@ -61,18 +65,18 @@ void DKnap(int p[], int w[], int n, int m) {
             }
         }
 
-        // Add remaining from previous Si
-        while (k <= h) {
-            pair[next++] = pair[k++];
-        }
 
-        // Prepare for next iteration
-        t = h + 1;
-        h = next - 1;
-        b[i + 1] = next;
+
+            while((k<=h)){
+                 pair[next++]=pair[k++];
+            }
+
+    t=h+1;
+    h=next-1;
+    b[i+1]=next;
     }
 
-    // Output final non-dominated set
+
     printf("\nFinal Optimal (Profit, Weight) pairs:\n");
     int maxProfit = 0;
     for (int i = t; i <= h; i++) {
@@ -82,7 +86,13 @@ void DKnap(int p[], int w[], int n, int m) {
     }
 
     printf("\nMaximum Profit: %d\n", maxProfit);
+
+
 }
+
+
+
+
 
 
 int main() {

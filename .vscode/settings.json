@@ -2,6 +2,7 @@
     "files.associations": {
         "*.asm": "assembly",
         "time.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "string.h": "c"
     }
 }
