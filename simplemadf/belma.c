@@ -1,93 +1,78 @@
 #include <stdio.h>
-#include <time.h>
-#define MAX 10
-#define INF 999
+#include <limits.h>
 
-int distance[MAX][MAX], path[MAX];
-int predecessor[MAX];
-int n;
+#define MAX 100
+#define INF 99999
 
-void print_path(int src, int dest) {
-    if (dest == src) {
-        printf("%d", src+1);
+typedef struct {
+    int src, dest, cost;
+} Edge;
+
+
+void printPath(int parent[], int vertex) {
+    if (parent[vertex] == -1) {
+        printf("%d", vertex);
         return;
     }
-    if (predecessor[dest] == -1) {
-        printf("No path");
-        return;
-    }
-    print_path(src, predecessor[dest]);
-    printf("->%d", dest+1);
+    printPath(parent, parent[vertex]);
+    printf(" -> %d", vertex);
 }
 
-void singlesource_sp(int v) {
-    int temp[MAX], i, j, k;
-    for(i=0; i<n; i++) {
-        path[i] = distance[v][i];
-        if (distance[v][i] != INF && i != v)
-            predecessor[i] = v;
-        else
-            predecessor[i] = -1;
+
+void BellmanFord(int v, Edge edge[], int dist[], int parent[], int n, int e) {
+
+    for (int i = 1; i <= n; i++) {
+        dist[i] = INF;
+        parent[i] = -1;
     }
-    for(k=1; k<n; k++) {
-        for(i=0; i<n; i++)
-            temp[i] = path[i];
-        for(i=0; i<n; i++) {
-            if(i != v) {
-                for(j=0; j<n; j++) {
-                    if(distance[j][i] != INF && path[j] != INF) {
-                        if(path[i] > path[j] + distance[j][i]) {
-                            path[i] = path[j] + distance[j][i];
-                            predecessor[i] = j;
-                        }
-                    }
-                }
+    dist[v] = 0;
+
+    for (int k = 1; k < n; k++) {
+        for (int i = 0; i < e; i++) {
+            int u = edge[i].src;
+            int w = edge[i].dest;
+            int cost = edge[i].cost;
+
+            if (dist[u] != INF && dist[w] > dist[u] + cost) {
+                dist[w] = dist[u] + cost;
+                parent[w] = u;
             }
+        }
+    }
+
+    printf("\nShortest distances and paths from vertex %d:\n", v);
+    for (int i = 1; i <= n; i++) {
+        if (dist[i] == INF) {
+            printf("Vertex %d: INF (No path)\n", i);
+        } else {
+            printf("Vertex %d: %d | Path: ", i, dist[i]);
+            printPath(parent, i);
+            printf("\n");
         }
     }
 }
 
 int main() {
-    int i, j, origin, destin, weight, v;
+    int n, e, v;
+    Edge edge[MAX];
+    int dist[MAX];
+    int parent[MAX];
 
-    printf("Enter number of nodes\n");
+    printf("Enter number of vertices: ");
     scanf("%d", &n);
 
-    for(i=0; i<n; i++)
-        for(j=0; j<n; j++)
-            distance[i][j] = (i == j) ? 0 : INF;
+    printf("Enter number of edges: ");
+    scanf("%d", &e);
 
-    printf("Enter edges as origin destination weight\n");
-    while(1) {
-        scanf("%d %d %d", &origin, &destin, &weight);
-        if(origin == -1 && destin == -1 && weight == -1)
-            break;
-        if(origin > n || destin > n || origin <= 0 || destin <= 0)
-            printf("Invalid edge\n");
-        else
-            distance[origin-1][destin-1] = weight;
-    }
-
-    printf("Enter starting vertex\n");
+    printf("Enter source vertex: ");
     scanf("%d", &v);
-    if(v <= 0 || v > n) {
-        printf("Invalid starting vertex\n");
-        return 1;
+
+    printf("Enter edges (src dest cost) including negative costs:\n");
+    for (int i = 0; i < e; i++) {
+        scanf("%d %d %d", &edge[i].src, &edge[i].dest, &edge[i].cost);
     }
 
-    singlesource_sp(v-1);
-
-    for (i = 0; i < n; i++) {
-        if (i != v-1) {
-            if (path[i] == INF) {
-                printf("No path\n");
-            } else {
-                printf("%d\n", path[i]);
-                print_path(v-1, i);
-                printf("\n");
-            }
-        }
-    }
+    BellmanFord(v, edge, dist, parent, n, e);
 
     return 0;
 }
