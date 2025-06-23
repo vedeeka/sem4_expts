@@ -11,7 +11,7 @@ int n;
 void MultistageGraph() {
     int i, j;
     
-    dist[n] = 0; // Distance from destination to destination is 0
+    dist[n] = 0; 
 
     for (i = n - 1; i >= 1; i--) {
         dist[i] = INF;

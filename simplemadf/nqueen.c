@@ -3,18 +3,15 @@
 
 #define MAX 20
 
-int x[MAX];  // Solution array
-
-// Function to check if a queen can be placed
+int x[MAX];  
 int Place(int k, int i) {
     for (int j = 1; j < k; j++) {
         if (x[j] == i || abs(x[j] - i) == abs(j - k))
             return 0; // Conflict
     }
-    return 1; // Safe
+    return 1; 
 }
 
-// Recursive function to solve N-Queens
 void NQueens(int k, int n) {
     for (int i = 1; i <= n; i++) {
         if (Place(k, i)) {

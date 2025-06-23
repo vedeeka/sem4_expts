@@ -8,7 +8,7 @@ int n, m;
 void SumOfSub(int s, int k, int r) {
     x[k] = 1;
     if (s + w[k] == m) {
-        // Print the solution
+
         printf("Subset: ");
         for (int i = 1; i <= k; i++) {
             if (x[i])
