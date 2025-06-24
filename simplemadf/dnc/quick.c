@@ -1,16 +1,17 @@
 #include <stdio.h>
 
 #define MAX 100
+#define INF 1000000000
+
 int a[MAX];
 
-// Function to swap two elements
 void Interchange(int i, int j) {
     int temp = a[i];
     a[i] = a[j];
     a[j] = temp;
 }
 
-// Partition function
+// Hoare's Partition (you provided), adapted to 0-based indexing
 int Partition(int m, int p) {
     int v = a[m];
     int i = m, j = p;
@@ -18,7 +19,7 @@ int Partition(int m, int p) {
     while (1) {
         do {
             i++;
-        } while (a[i] < v);
+        } while (i <= p && a[i] < v);
 
         do {
             j--;
@@ -35,27 +36,47 @@ int Partition(int m, int p) {
     return j;
 }
 
-// Recursive QuickSort function
-void QuickSort(int p, int q) {
-    if (p < q) {
-        int j = Partition(p, q + 1);  // Adjusted as per the pseudocode
-        QuickSort(p, j - 1);
-        QuickSort(j + 1, q);
+// Select algorithm for k-th smallest element (0-based)
+void Select(int n, int k) {
+    int low = 0;
+    int up = n;
+    a[n] = INF;  // Sentinel at a[n], since input ends at a[n-1]
+
+    while (1) {
+        int j = Partition(low, up);
+
+        if (k == j)
+            return;
+        else if (k < j)
+            up = j;
+        else
+            low = j + 1;
     }
 }
 
 int main() {
-    int n;
+    int n, k;
+
     printf("Enter number of elements: ");
     scanf("%d", &n);
 
-    printf("Enter array elements:\n");
+    printf("Enter %d elements:\n", n);
     for (int i = 0; i < n; i++)
         scanf("%d", &a[i]);
 
-    QuickSort(0, n - 1);
+    printf("Enter k (0-based index of k-th smallest element): ");
+    scanf("%d", &k);
 
-    printf("Sorted array:\n");
+    if (k < 0 || k >= n) {
+        printf("Invalid k\n");
+        return 1;
+    }
+
+    Select(n, k);
+
+    printf("The %d-th smallest element is: %d\n", k, a[k]);
+
+    printf("Array after Select (not fully sorted):\n");
     for (int i = 0; i < n; i++)
         printf("%d ", a[i]);
     printf("\n");

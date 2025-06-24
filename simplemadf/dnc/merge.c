@@ -1,39 +1,40 @@
+
 #include <stdio.h>
 
 #define MAX 100
 
 int a[MAX], b[MAX]; // Global arrays
 
-// Merge function: merges two sorted subarrays into one
-void Merge(int low, int mid, int high) {
-    int h = low, i = low, j = mid + 1;
+void merge(int l, int m, int u) {
+    int h = l, i = l, j = m + 1;
 
-    while (h <= mid && j <= high) {
-        if (a[h] <= a[j])
+    while (h <= m && j <= u) {
+        if (a[h] < a[j])
             b[i++] = a[h++];
         else
             b[i++] = a[j++];
     }
 
-    if (h > mid) {
-        for (int k = j; k <= high; k++)
+    if (h <= m) {
+        for (int k = h; k <= m; k++)
             b[i++] = a[k];
     } else {
-        for (int k = h; k <= mid; k++)
+        for (int k = j; k <= u; k++)
             b[i++] = a[k];
     }
 
-    for (int k = low; k <= high; k++)
-        a[k] = b[k];
+    // ✅ FIX: include u
+    for (int i = l; i <= u; i++) {
+        a[i] = b[i];
+    }
 }
 
-// Recursive Merge Sort
-void MergeSort(int low, int high) {
-    if (low < high) {
-        int mid = (low + high) / 2;
-        MergeSort(low, mid);
-        MergeSort(mid + 1, high);
-        Merge(low, mid, high);
+void MergeSort(int l, int u) {
+    if (l < u) {
+        int m = (l + u) / 2;
+        MergeSort(l, m);
+        MergeSort(m + 1, u);
+        merge(l, m, u);
     }
 }
 
@@ -55,4 +56,4 @@ int main() {
 
     printf("\n");
     return 0;
-}
+} 
