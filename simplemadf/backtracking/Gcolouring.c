@@ -1,22 +1,21 @@
 #include <stdio.h>
 
-int G[10][10];      // Adjacency matrix
-int x[10];          // Color assignments
-int n, m;           // n = number of vertices, m = max number of colors
+int G[10][10];  // Adjacency matrix
+int x[10];      // Color assignments
+int n, m;       // n = number of vertices, m = current number of colors
+int found = 0;  // Flag to indicate valid coloring found
 
-// Function to get the next valid color for vertex k
+
 void NextValue(int k) {
     int j;
     while (1) {
         x[k] = (x[k] + 1) % (m + 1); // Try next color
         if (x[k] == 0)               // No more colors
             return;
-        
         for (j = 1; j <= n; j++) {
             if (G[k][j] && x[k] == x[j]) // Adjacent vertex same color
                 break;
         }
-
         if (j == n + 1) // Found valid color
             return;
     }
@@ -30,6 +29,7 @@ void mColoring(int k) {
             return;
 
         if (k == n) {  // All vertices colored
+            found = 1;
             for (int i = 1; i <= n; i++)
                 printf("%d ", x[i]);
             printf("\n");
@@ -45,8 +45,6 @@ int main() {
 
     printf("Enter number of vertices: ");
     scanf("%d", &n);
-    printf("Enter number of colors: ");
-    scanf("%d", &m);
 
     // Initialize graph
     for (i = 1; i <= n; i++)
@@ -58,14 +56,23 @@ int main() {
     printf("Enter edges (u v):\n");
     for (i = 0; i < edges; i++) {
         scanf("%d %d", &u, &v);
-        G[u][v] = G[v][u] = 1; 
+        G[u][v] = G[v][u] = 1;
     }
 
-    for (i = 1; i <= n; i++)
-        x[i] = 0; // Initialize all colors to 0
+    // Try coloring with increasing number of colors
+    for (m = 1; m <= n; m++) {
+        for (i = 1; i <= n; i++)
+            x[i] = 0; // Reset color assignments
 
-    printf("All possible colorings:\n");
-    mColoring(1);
+        found = 0;
+        printf("\nTrying with %d color(s):\n", m);
+        mColoring(1);
+
+        if (found) {
+            printf("✅ Chromatic number is: %d\n", m);
+            break;
+        }
+    }
 
     return 0;
 }
