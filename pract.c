@@ -1,90 +1,129 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#define MAX 256
 
-#define MAX 100
+typedef struct Node {
+char ch;
+int freq;
+int l;
+struct Node *left, *right;
+int order;
+} Node;
 
-int n;                 // Number of items
-int m;                 // Maximum capacity
-int p[MAX], w[MAX];    // Profits and Weights
-int x[MAX], y[MAX];    // Final and Temporary solution
-int fp = 0, fw = 0;    // Final profit and final weight
+typedef struct {
+    Node* data[MAX];
+    int size;
+} PQ;
 
-// Calculate upper bound
-float Bound(int cp, int cw, int k) {
-float b=cp;
-int c=cw;
-for(int i=k+1;i<=n;i++){
-    c=c+w[i];
-    if(c<=m){
-        b=b+p[i];
-    }else{
-        b+=(1-(float)(c-m)/w[i])*p[i];
-        return b;
+int freq[MAX] = {0}, order_count = 0;
+
+Node* createNode(char ch, int freq, int isLeaf) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->ch = ch;
+    node->freq = freq;
+    node->left = node->right = NULL;
+    node->l = isLeaf;
+    node->order = order_count++;
+    return node;
+}
+
+
+
+int compare(Node* a, Node* b) {
+    if (a->freq != b->freq) return a->freq - b->freq;
+    if (a->l && b->l) return a->ch - b->ch;
+    if (a->l != b->l) return a->l ? -1 : 1;
+    return a->order - b->order;
+}
+
+void insertQueue(PQ* q, Node* node) {
+    int i = q->size++;
+    while (i > 0 && compare(node, q->data[(i - 1) / 2]) < 0) {
+        q->data[i] = q->data[(i - 1) / 2];
+        i = (i - 1) / 2;
     }
-}
-return b;
+    q->data[i] = node;
 }
 
-// Branch and bound (no visualization)
-void BKnap(int k, int cp, int cw) {
-    if (k > n) {
-        if (cp > fp) {
-            fp = cp;
-            fw = cw;
-            for (int j = 1; j <= n; j++)
-                x[j] = y[j];
-        }
+Node* removeMin(PQ* q) {
+Node *min =q->data[0];
+Node *last =q->data[--q->size];
+int i=0;
+int child;
+while(i*2-1<q->size){
+    child   =i*2+1;
+    if(child+1<q->size  && compare(q->data[child+1], q->data[child])<0)
+        child++;
+        if(compare(last,q->data[child])<=0) break;
+        q->data[i]=q->data[child];
+   
+        i=child;
+}
+q->data[i]=last;
+return min;
+}
+
+void generateCodes(Node* root, char* code, int depth, char codes[MAX][MAX]) {
+    if (!root) return;
+    if (root->l) {
+        code[depth] = '\0';
+        strcpy(codes[(unsigned char)root->ch], code);
         return;
     }
+    code[depth] = '0';
+    generateCodes(root->left, code, depth + 1, codes);
+    code[depth] = '1';
+    generateCodes(root->right, code, depth + 1, codes);
+}
 
-    // Include item k
-    if (cw + w[k] <= m) {
-        y[k] = 1;
-        BKnap(k + 1, cp + p[k], cw + w[k]);
-    }
+Node* buildHuffmanTree(char* str) {
+PQ q;
+    q.size = 0;
 
-    // Exclude item k if promising
-    if (Bound(cp, cw, k) > fp) {
-        y[k] = 0;
-        BKnap(k + 1, cp, cw);
+for(int i=0;i<MAX;i++){
+    freq[(unsigned char)str[i]]++;
+}
+
+for(int i = 0; i < MAX; i++) {
+    if (freq[i] > 0) {
+        insertQueue(&q, createNode((char)i, freq[i], 1));
     }
 }
 
-// Print final solution
-void printSolution() {
-    printf("Optimal profit: %d\n", fp);
-    printf("Optimal weight: %d\n", fw);
-    printf("Solution vector:\n");
-    for (int i = 1; i <= n; i++)
-        printf("%d ", x[i]);
-    printf("\n");
+if(q.size >0) {
+Node *left, *right, *newNode;
+    while (q.size > 1) {
+        left = removeMin(&q);
+        right = removeMin(&q);
+        newNode = createNode('\0', left->freq + right->freq, 0);
+        newNode->left = left;
+        newNode->right = right;
+        insertQueue(&q, newNode);
+    }
+    return q.data[0];
+}
+    return removeMin(&q);
 }
 
 int main() {
+    char str[1000], codes[MAX][MAX] = {{0}}, buffer[MAX];
+
+    printf("Enter the input string: ");
+    scanf(" %[^\n]", str);
+
+    Node* root = buildHuffmanTree(str);
+    generateCodes(root, buffer, 0, codes);
+
+    printf("\nHuffman Codes:\nCharacter | Code\n------------------------\n");
     for (int i = 0; i < MAX; i++) {
-        x[i] = 0;
-        y[i] = 0;
-        p[i] = 0;
-        w[i] = 0;
+        if (freq[i] > 0) {
+            if (i == ' ')
+                printf("   sp     | %s\n", codes[i]);
+            else
+                printf("    %c     | %s\n", i, codes[i]);
+        }
     }
-
-    printf("Enter number of items: ");
-    scanf("%d", &n);
-
-    printf("Enter max capacity of knapsack: ");
-    scanf("%d", &m);
-
-    printf("Enter profits:\n");
-    for (int i = 1; i <= n; i++)
-        scanf("%d", &p[i]);
-
-    printf("Enter weights:\n");
-    for (int i = 1; i <= n; i++)
-        scanf("%d", &w[i]);
-
-    BKnap(1, 0, 0);
-
-    printSolution();
 
     return 0;
 }

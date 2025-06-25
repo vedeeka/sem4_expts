@@ -1,153 +1,124 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define MAX 257
+#define MAX 256
 
 typedef struct Node {
     char ch;
     int freq;
     struct Node *left, *right;
+    int l;
+    int order;
 } Node;
 
 typedef struct {
-    Node *tree;
-    int freq;
-} HeapNode;
+    Node* data[MAX];
+    int size;
+} PQ;
 
-HeapNode heap[MAX];
-int heapSize = 0;
+int freq[MAX] = {0}, order_count = 0;
 
-// Create new Huffman Tree node
-Node* createNode(char ch, int freq, Node* left, Node* right) {
+Node* createNode(char ch, int freq, int isLeaf) {
     Node* node = (Node*)malloc(sizeof(Node));
     node->ch = ch;
     node->freq = freq;
-    node->left = left;
-    node->right = right;
+    node->left = node->right = NULL;
+    node->l = isLeaf;
+    node->order = order_count++;
     return node;
 }
 
-// Sift down (adjust) to maintain min-heap property
-void adjust(HeapNode a[], int i, int n) {
-    HeapNode temp = a[i];
-    int child;
-    for (; 2*i <= n; i = child) {
-        child = 2 * i;
-        if (child < n && a[child + 1].freq < a[child].freq)
+
+
+int compare(Node* a, Node* b) {
+    if (a->freq != b->freq) return a->freq - b->freq;
+    if (a->l && b->l) return a->ch - b->ch;
+    if (a->l != b->l) return a->l ? -1 : 1;
+    return a->order - b->order;
+}
+
+void insertQueue(PQ* q, Node* node) {
+    int i = q->size++;
+    while (i > 0 && compare(node, q->data[(i - 1) / 2]) < 0) {
+        q->data[i] = q->data[(i - 1) / 2];
+        i = (i - 1) / 2;
+    }
+    q->data[i] = node;
+}
+
+Node* removeMin(PQ* q) {
+    Node* min = q->data[0];
+    Node* last = q->data[--q->size];
+    int i = 0, child;
+    while (i * 2 + 1 < q->size) {
+        child = i * 2 + 1;
+        if (child + 1 < q->size && compare(q->data[child + 1], q->data[child]) < 0)
             child++;
-        if (temp.freq <= a[child].freq)
-            break;
-        a[i] = a[child];
+        if (compare(last, q->data[child]) <= 0) break;
+        q->data[i] = q->data[child];
+        i = child;
     }
-    a[i] = temp;
+    q->data[i] = last;
+    return min;
 }
 
-// Heapify the array from bottom up
-void heapify(HeapNode a[], int n) {
-    for (int i = n / 2; i >= 1; i--) {
-        adjust(a, i, n);
+void generateCodes(Node* root, char* code, int depth, char codes[MAX][MAX]) {
+    if (!root) return;
+    if (root->l) {
+        code[depth] = '\0';
+        strcpy(codes[(unsigned char)root->ch], code);
+        return;
     }
+    code[depth] = '0';
+    generateCodes(root->left, code, depth + 1, codes);
+    code[depth] = '1';
+    generateCodes(root->right, code, depth + 1, codes);
 }
 
-// Remove and return the min element from the heap
-HeapNode delMin(HeapNode a[], int *n) {
-    HeapNode minElem = a[1];
-    a[1] = a[*n];
-    (*n)--;
-    adjust(a, 1, *n);
-    return minElem;
-}
+Node* buildHuffmanTree(char* str) {
+    PQ q;
+    q.size = 0;
+   
 
-// Insert a new element into the heap (sift up)
-void insertHeap(HeapNode a[], HeapNode item, int *n) {
-    (*n)++;
-    int i = *n;
-    while (i > 1 && a[i / 2].freq > item.freq) {
-        a[i] = a[i / 2];
-        i /= 2;
-    }
-    a[i] = item;
-}
-
-// Build frequency table from input string
-void buildFrequency(char *str, int freq[256]) {
-    for (int i = 0; i < 256; i++)
-        freq[i] = 0;
-    for (int i = 0; str[i]; i++) {
+    for (int i = 0; str[i]; i++)
         freq[(unsigned char)str[i]]++;
-    }
-}
 
-// Build Huffman Tree and return root
-Node* huffman(char *str) {
-    int freq[256];
-    buildFrequency(str, freq);
-
-    heapSize = 0;
-
-    // Insert all chars with freq > 0 into heap
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < MAX; i++) {
         if (freq[i] > 0) {
-            Node *node = createNode((char)i, freq[i], NULL, NULL);
-            heap[++heapSize].tree = node;
-            heap[heapSize].freq = freq[i];
+            insertQueue(&q, createNode((char)i, freq[i], 1));
         }
     }
 
-    // Build min heap
-    heapify(heap, heapSize);
-
-    // Build Huffman tree
-    while (heapSize > 1) {
-        HeapNode min1 = delMin(heap, &heapSize);
-        HeapNode min2 = delMin(heap, &heapSize);
-
-        Node *merged = createNode('$', min1.freq + min2.freq, min1.tree, min2.tree);
-        HeapNode newNode = {merged, merged->freq};
-
-        insertHeap(heap, newNode, &heapSize);
+    while (q.size > 1) {
+        Node* left = removeMin(&q);
+        Node* right = removeMin(&q);
+        Node* merged = createNode('\0', left->freq + right->freq, 0);
+        merged->left = left;
+        merged->right = right;
+        insertQueue(&q, merged);
     }
 
-    return heapSize == 1 ? heap[1].tree : NULL;
-}
-
-// Print Huffman codes recursively
-void printCodes(Node* root, char *code, int depth) {
-    if (!root->left && !root->right) {
-        code[depth] = '\0';
-        if (root->ch == ' ')
-            printf("Character 'space': %s\n", code);
-        else if (root->ch == '\n')
-            printf("Character '\\n': %s\n", code);
-        else if (root->ch < 32 || root->ch > 126) // Non-printable
-            printf("Character 0x%02x: %s\n", (unsigned char)root->ch, code);
-        else
-            printf("Character '%c': %s\n", root->ch, code);
-        return;
-    }
-    if (root->left) {
-        code[depth] = '0';
-        printCodes(root->left, code, depth + 1);
-    }
-    if (root->right) {
-        code[depth] = '1';
-        printCodes(root->right, code, depth + 1);
-    }
+    return removeMin(&q);
 }
 
 int main() {
-    char str[] = "j is the position of the partitioning element";
+    char str[1000], codes[MAX][MAX] = {{0}}, buffer[MAX];
 
-    Node* root = huffman(str);
-    if (!root) {
-        printf("Error: Huffman tree could not be built.\n");
-        return 1;
+    printf("Enter the input string: ");
+    scanf(" %[^\n]", str);
+
+    Node* root = buildHuffmanTree(str);
+    generateCodes(root, buffer, 0, codes);
+
+    printf("\nHuffman Codes:\nCharacter | Code\n------------------------\n");
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            if (i == ' ')
+                printf("   sp     | %s\n", codes[i]);
+            else
+                printf("    %c     | %s\n", i, codes[i]);
+        }
     }
-
-    char code[100];
-    printf("Huffman Codes:\n");
-    printCodes(root, code, 0);
 
     return 0;
 }
