@@ -1,72 +1,90 @@
-
-
 #include <stdio.h>
+#include <string.h>
 
 #define MAX 100
 
-int a[MAX], b[MAX]; // Global arrays
+int n;                 // Number of items
+int m;                 // Maximum capacity
+int p[MAX], w[MAX];    // Profits and Weights
+int x[MAX], y[MAX];    // Final and Temporary solution
+int fp = 0, fw = 0;    // Final profit and final weight
 
-void interchange(int *x, int *y) {
-    int temp = *x;
-    *x = *y;
-    *y = temp;
-}
-int merge(int l,int u){
-int v=a[l];
-int i=l,j=u;
-while(i<j){
-    while(a[i]<v){
-        i++;
-    }
-    while(a[j]>v){
-        j--;
-    }
-    if(i<j){
-        interchange(&a[i],&a[j]);
-       
-    }else
-            break;
-
-}
- 
-    return j;
-
-
-
-
-}
-
-
-
-
-void MergeSort(int l,int u){
-    if(l<u){
-        int m = merge(l,u);
-
-        MergeSort(l,m-1);
-        MergeSort(m+1,u);
-        
+// Calculate upper bound
+float Bound(int cp, int cw, int k) {
+float b=cp;
+int c=cw;
+for(int i=k+1;i<=n;i++){
+    c=c+w[i];
+    if(c<=m){
+        b=b+p[i];
+    }else{
+        b+=(1-(float)(c-m)/w[i])*p[i];
+        return b;
     }
 }
+return b;
+}
 
+// Branch and bound (no visualization)
+void BKnap(int k, int cp, int cw) {
+    if (k > n) {
+        if (cp > fp) {
+            fp = cp;
+            fw = cw;
+            for (int j = 1; j <= n; j++)
+                x[j] = y[j];
+        }
+        return;
+    }
 
+    // Include item k
+    if (cw + w[k] <= m) {
+        y[k] = 1;
+        BKnap(k + 1, cp + p[k], cw + w[k]);
+    }
+
+    // Exclude item k if promising
+    if (Bound(cp, cw, k) > fp) {
+        y[k] = 0;
+        BKnap(k + 1, cp, cw);
+    }
+}
+
+// Print final solution
+void printSolution() {
+    printf("Optimal profit: %d\n", fp);
+    printf("Optimal weight: %d\n", fw);
+    printf("Solution vector:\n");
+    for (int i = 1; i <= n; i++)
+        printf("%d ", x[i]);
+    printf("\n");
+}
 
 int main() {
-    int n;
+    for (int i = 0; i < MAX; i++) {
+        x[i] = 0;
+        y[i] = 0;
+        p[i] = 0;
+        w[i] = 0;
+    }
 
-    printf("Enter number of elements: ");
+    printf("Enter number of items: ");
     scanf("%d", &n);
 
-    printf("Enter %d elements:\n", n);
-    for (int i = 0; i < n; i++)
-        scanf("%d", &a[i]);
+    printf("Enter max capacity of knapsack: ");
+    scanf("%d", &m);
 
-    MergeSort(0, n - 1);
+    printf("Enter profits:\n");
+    for (int i = 1; i <= n; i++)
+        scanf("%d", &p[i]);
 
-    printf("Sorted array:\n");
-    for (int i = 0; i < n; i++)
-        printf("%d ", a[i]);
+    printf("Enter weights:\n");
+    for (int i = 1; i <= n; i++)
+        scanf("%d", &w[i]);
 
-    printf("\n");
+    BKnap(1, 0, 0);
+
+    printSolution();
+
     return 0;
 }
