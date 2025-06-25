@@ -1,71 +1,62 @@
 #include <stdio.h>
 #include <limits.h>
 
-#define MAX 20  // maximum number of keys
+#define MAX 100
 
-void OptimalBST(float p[], float q[], int n, float e[MAX][MAX], int root[MAX][MAX]) {
-    float w[MAX][MAX];
-    int i, j, l, r;
-    float t;
+float c[MAX][MAX];  // Cost matrix
+float w[MAX][MAX];  // Weight matrix
+int r[MAX][MAX];    // Root matrix
 
-    for (i = 1; i <= n+1; i++) {
-        e[i][i-1] = q[i-1];
-        w[i][i-1] = q[i-1];
-    }
+// Function to find the best root in range
+int Find(int i, int j) {
+    float min = 1e9;
+    int l = -1;
 
-    for (l = 1; l <= n; l++) { // l = length of chain
-        for (i = 1; i <= n - l + 1; i++) {
-            j = i + l - 1;
-            e[i][j] = INT_MAX;
-            w[i][j] = w[i][j-1] + p[j] + q[j];
-            for (r = i; r <= j; r++) {
-                t = e[i][r-1] + e[r+1][j] + w[i][j];
-                if (t < e[i][j]) {
-                    e[i][j] = t;
-                    root[i][j] = r;
-                }
-            }
+    for (int m = r[i][j - 1]; m <= r[i + 1][j]; m++) {
+        float cost = c[i][m - 1] + c[m][j];
+        if (cost < min) {
+            min = cost;
+            l = m;
         }
     }
+
+    return l;
 }
 
-void printOBST(int root[MAX][MAX], int i, int j, int parent, char *direction) {
-    if (i > j)
-        return;
+// OBST algorithm
+void OBST(float p[], float q[], int n) {
+    for (int i = 0; i < n; i++) {
+        w[i][i] = q[i];
+        c[i][i] = 0;
+        r[i][i] = 0;
+        w[i][i + 1] = q[i] + q[i + 1] + p[i + 1];
+        c[i][i + 1] = q[i] + q[i + 1] + p[i + 1];
+        r[i][i + 1] = i + 1;
+    }
 
-    int r = root[i][j];
-    if (parent == -1)
-        printf("Root is key %d\n", r);
-    else
-        printf("Key %d is %s child of key %d\n", r, direction, parent);
+    w[n][n] = q[n];
+    c[n][n] = 0;
+    r[n][n] = 0;
 
-    printOBST(root, i, r-1, r, "left");
-    printOBST(root, r+1, j, r, "right");
+    for (int m = 2; m <= n; m++) {
+        for (int i = 0; i <= n - m; i++) {
+            int j = i + m;
+            w[i][j] = w[i][j - 1] + p[j] + q[j];
+            int k = Find(i, j);
+            c[i][j] = w[i][j] + c[i][k - 1] + c[k][j];
+            r[i][j] = k;
+        }
+    }
+
+    printf("Minimum cost: %.2f\n", c[0][n]);
+    printf("Total weight: %.2f\n", w[0][n]);
+    printf("Root of OBST: %d\n", r[0][n]);
 }
-
 int main() {
-    int n, i;
-    float p[MAX], q[MAX];
-    float e[MAX][MAX];
-    int root[MAX][MAX];
+    int n = 5;
+    float p[] = {0,5, 6, 4, 3, 7};   // p[1..n]
+    float q[] = {7,6,5,4,3,7}; // q[0..n]
 
-    printf("Enter number of keys: ");
-    scanf("%d", &n);
-
-    printf("Enter probabilities of successful searches (p[1] to p[%d]):\n", n);
-    for (i = 1; i <= n; i++)
-        scanf("%f", &p[i]);
-
-    printf("Enter probabilities of unsuccessful searches (q[0] to q[%d]):\n", n);
-    for (i = 0; i <= n; i++)
-        scanf("%f", &q[i]);
-
-    OptimalBST(p, q, n, e, root);
-
-    printf("\nCost of Optimal BST = %.2f\n", e[1][n]);
-
-    printf("\nStructure of Optimal BST:\n");
-    printOBST(root, 1, n, -1, "");
-
+    OBST(p, q, n);
     return 0;
 }
