@@ -12,7 +12,7 @@ void adjust(Edge a[], int i, int n) {
     Edge item = a[i];
     while (j <= n) {
         if ((j < n) && (a[j].w > a[j + 1].w || 
-            (a[j].w == a[j + 1].w && a[j].u > a[j + 1].u))) {
+    (a[j].w == a[j + 1].w && a[j].u > a[j + 1].u))) {
             j = j + 1;
         }
         if (item.w <= a[j].w && 
