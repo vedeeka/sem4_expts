@@ -8,7 +8,7 @@ int Prim(int n) {
     int mincost = INF;
     int k = 1, l = 1;
 
-    // Step 1: Find edge (k, l) with minimum cost
+
     for (int i = 1; i <= n; i++) {
         for (int j = 1; j <= n; j++) {
             if (i != j && cost[i][j] < mincost) {
@@ -33,7 +33,7 @@ int Prim(int n) {
     near[k] = 0;
     near[l] = 0;
 
-    // Add n - 2 more edges
+
     int edgeCount = 1; // already added 1 edge
     for (int i = 2; i <= n - 1; i++) {
         int min = INF;
