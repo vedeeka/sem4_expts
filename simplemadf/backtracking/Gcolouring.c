@@ -7,6 +7,7 @@ int found = 0;  // Flag to indicate valid coloring found
 
 
 
+
 void NextValue(int k) {
     int j;
     while (1) {
