@@ -1,209 +1,74 @@
 #include <stdio.h>
-int n;
-int p[100], w[100];
 
-void sort(int p[], int n) {
-    for (int i = 0; i < n; i++) {
-        for (int j = i; j < n; j++) {
-            if (p[i] < p[j]) {
-                int t = p[i];
-                p[i] = p[j];
-                p[j] = t;
+int G[10][10];  // Adjacency matrix
+int x[10];      // Color assignments
+int n, m;       // n = number of vertices, m = current number of colors
+int found = 0;  // Flag to indicate valid coloring found
 
-                t = w[i];
-                w[i] = w[j];
-                w[j] = t;
+
+void NextValue(int k) {
+int j;
+while(1){
+    x[k]=(x[k]+1)%(n+1);
+   if( x[k]==0 )return;
+
+
+
+if(G[x[k-1]][x[k]]!=0){
+   for(j=1;j<k;j++){
+    if(x[j]==x[k])break;
+   }
+
+            if (j == k) { 
+                if ((k < n) || (k == n && G[x[n]][x[1]] != 0))
+                    return;
             }
-        }
-    }
-
-
-    // printf("Sorted profits: ");
-    // for (int i = 0; i < n; i++) {
-    //     printf("%d ", p[i]);
-    // }
-    // printf("\n");
-
-    // printf("Sorted weights: ");
-    // for (int i = 0; i < n; i++) {
-    //     printf("%d ", w[i]);
-    // }
-    // printf("\n");
+}
+}
 }
 
-
-void least_w(int n,int m){
-  
-    float x[n];
-    int remaining=m;
-  int index[n];
-  int t_p;
-  int t_w;
-
-  for(int i=0;i<n;i++){
-     index[i]=i;
-     x[i]=0.0;
-  }
-
-  for(int i=0;i<n;i++){
-    for(int j=0;j<n-i-1;j++){
-        if(w[index[j]]>w[index[j+1]]){
-            int t=index[j];
-            index[j]=index[j+1];
-            index[j+1]=t;
-        }
-    }
-  }
-
-  for(int i=0;i<n && remaining>0;i++){
-        int id=index[i];
-        if(w[id]<=remaining){
-            remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
-            x[id]=1.0;
-        }else{
-            x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
-            remaining = 0;
-
-        }
-  }
-
-     printf("\n Sorted weights: ");
-     for (int i = 0; i < n; i++) {
-        printf("%.2f ", x[i]);
- }
-
-}
-void ratio(int n,int m){
-  
-    float x[n];
-    int remaining=m;
-  int index[n];
-  int t_p;
-  int t_w;
-
-  for(int i=0;i<n;i++){
-     index[i]=i;
-     x[i]=0.0;
-  }
-
-  for(int i=0;i<n;i++){
-    for(int j=0;j<n-i-1;j++){
-        if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]]) {
-            
-            int t=index[j];
-            index[j]=index[j+1];
-            index[j+1]=t;
-        }
-    }
-  }
-
- 
-
-  for(int i=0;i<n && remaining>0;i++){
-        int id=index[i];
-        if(w[id]<=remaining){
-            remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
-            x[id]=1.0;
-        }else{
-            x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
-            remaining = 0;
-
-        }
-  }
-
-     printf("\n \nSorted weights: ");
-     for (int i = 0; i < n; i++) {
-        printf("%.2f ", x[i]);
- }
-
-
-}
-
-
-void max_profit(int n,int m){
-  
-    float x[n];
-    int remaining=m;
-  int index[n];
-  int t_p;
-  int t_w;
-
-  for(int i=0;i<n;i++){
-     index[i]=i;
-     x[i]=0.0;
-  }
-
-  for(int i=0;i<n;i++){
-    for(int j=0;j<n-i-1;j++){
-        if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]])
-{
-            int t=index[j];
-            index[j]=index[j+1];
-            index[j+1]=t;
-        }
-    }
-  }
-
-  for(int i=0;i<n && remaining>0;i++){
-        int id=index[i];
-        if(w[id]<=remaining){
-            remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
-            x[id]=1.0;
-        }else{
-            x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
-            remaining = 0;
-
-        }
-  }
-
-     printf("\n \nSorted weights: ");
-     for (int i = 0; i < n; i++) {
-        printf("%.2f ", x[i]);
- }
-
-
-}
-
-
-int main(){
+// Recursive backtracking function
+void mColoring(int k) {
+while(1){
+    NextValue(k);
+   if( x[k]==0) return;
+    if(k==n)
    
-    int m;
-     // For example matching the image: n=3, m=20, p=(25,24,15), w=(18,15,10)
-     printf("Enter number of elements (n): ");
-     scanf("%d", &n);
-   
-    
-    
-     printf("Enter weights (w1,w2,...): ");
-     for (int i = 0; i < n; i++)
-     {
-         scanf("%d", &w[i]);
-        
+    {   found=1;
+        for(int i=0;i<n;i++)
+        printf("%d",x[i]);
+    }else{
+        mColoring(k+1);
+    }
+}
+}
 
-     }
-     
-     printf("Enter value of m (capacity): ");
-     scanf("%d", &m);
-     int sum;
-     printf("Enter profits (p1,p2,...): ");
-     for (int i = 0; i < n; i++)
-         scanf("%d", &p[i]);
+// Driver code
+int main() {
+    int i, j, edges, u, v;
+
+    printf("Enter number of vertices: ");
+    scanf("%d", &n);
+
+    // Initialize graph
+    for (i = 1; i <= n; i++)
+        for (j = 1; j <= n; j++)
+            G[i][j] = 0;
+
+    printf("Enter number of edges: ");
+    scanf("%d", &edges);
+    printf("Enter edges (u v):\n");
+    for (i = 0; i < edges; i++) {
+        scanf("%d %d", &u, &v);
+        G[u][v] = G[v][u] = 1;
+    }
+
+      for (i = 1; i <= n; i++)
+        x[i] = 0;
+
+    x[1] = 1; 
+        mColoring(2);
 
 
-      max_profit(n,m);
-      least_w(n,m);
-      ratio(n,m);
-     
+    return 0;
 }
