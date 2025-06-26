@@ -37,8 +37,8 @@ void least_w(int n,int m){
     float x[n];
     int remaining=m;
   int index[n];
-  int t_p;
-  int t_w;
+  int t_p=0;
+  int t_w=0;
 
   for(int i=0;i<n;i++){
      index[i]=i;
@@ -59,13 +59,13 @@ void least_w(int n,int m){
         int id=index[i];
         if(w[id]<=remaining){
             remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
+            t_p+=p[id];
+            t_w+=w[id];
             x[id]=1.0;
         }else{
             x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
+            t_p+=x[id]*p[i];
+            t_w+=x[id]*w[i];
             remaining = 0;
 
         }
@@ -75,15 +75,15 @@ void least_w(int n,int m){
      for (int i = 0; i < n; i++) {
         printf("%.2f ", x[i]);
  }
-
+ printf("total: %d ", t_p);
 }
 void ratio(int n,int m){
   
     float x[n];
     int remaining=m;
   int index[n];
-  int t_p;
-  int t_w;
+  int t_p=0;
+  int t_w=0;
 
   for(int i=0;i<n;i++){
      index[i]=i;
@@ -107,13 +107,13 @@ void ratio(int n,int m){
         int id=index[i];
         if(w[id]<=remaining){
             remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
+            t_p+=p[id];
+            t_w+=w[id];
             x[id]=1.0;
         }else{
             x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
+            t_p+=x[id]*p[i];
+            t_w+=x[id]*w[i];
             remaining = 0;
 
         }
@@ -124,7 +124,7 @@ void ratio(int n,int m){
         printf("%.2f ", x[i]);
  }
 
-
+ printf("total: %d ", t_p);
 }
 
 
@@ -133,8 +133,8 @@ void max_profit(int n,int m){
     float x[n];
     int remaining=m;
   int index[n];
-  int t_p;
-  int t_w;
+  int t_p=0;
+  int t_w=0;
 
   for(int i=0;i<n;i++){
      index[i]=i;
@@ -156,13 +156,13 @@ void max_profit(int n,int m){
         int id=index[i];
         if(w[id]<=remaining){
             remaining -= w[id];
-            t_p=p[id];
-            t_w=w[id];
+            t_p=t_p+p[id];
+            t_w=t_w+w[id];
             x[id]=1.0;
         }else{
             x[id]=(float)remaining/w[id];
-            t_p=x[id]*p[i];
-            t_w=x[id]*w[i];
+            t_p+=x[id]*p[i];
+            t_w+=x[id]*w[i];
             remaining = 0;
 
         }
@@ -170,9 +170,11 @@ void max_profit(int n,int m){
 
      printf("\n \nSorted weights: ");
      for (int i = 0; i < n; i++) {
+        
         printf("%.2f ", x[i]);
- }
 
+ }
+ printf("total: %d ", t_p);
 
 }
 
