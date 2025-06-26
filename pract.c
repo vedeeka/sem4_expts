@@ -1,67 +1,209 @@
-#include<stdio.h>
+#include <stdio.h>
+int n;
+int p[100], w[100];
 
-int L[12][12];
+void sort(int p[], int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            if (p[i] < p[j]) {
+                int t = p[i];
+                p[i] = p[j];
+                p[j] = t;
 
-int lsc(char x[], char y[]) {
-    for (int i = 0; i <= 12; i++) {
-        L[i][0] = 0;
-    }
-    for (int i = 0; i <= 10; i++) {
-        L[0][i] = 0;
-    }
-
-    for (int i = 1; i < 12; i++) {
-        for (int j = 1; j < 10; j++) {
-            if (x[j] == y[i]) {
-                L[i][j] = L[i - 1][j - 1] + 1;
-            } else {
-                int max;
-                if (L[i - 1][j] > L[i][j - 1]) {
-                    max = L[i - 1][j];
-                } else {
-                    max = L[i][j - 1];
-                }
-                L[i][j] = max;
+                t = w[i];
+                w[i] = w[j];
+                w[j] = t;
             }
         }
     }
 
-    for (int i = 0; i < 12; i++) {
-        for (int j = 0; j < 10; j++) {
-            printf("%d ", L[i][j]);
-        }
-        printf(" \n");
-    }
 
-    // Backtrack to find LCS
-    int i = 11, j = 9;
-    char lcs[12]; // Max LCS size is min(10,12)
-    int index = 0;
+    // printf("Sorted profits: ");
+    // for (int i = 0; i < n; i++) {
+    //     printf("%d ", p[i]);
+    // }
+    // printf("\n");
 
-    while (i > 0 && j > 0) {
-        if (y[i] == x[j]) {
-            lcs[index++] = x[j];
-            i--;
-            j--;
-        } else if (L[i - 1][j] > L[i][j - 1]) {
-            i--;
-        } else {
-            j--;
-        }
-    }
-
-    printf("LCS: ");
-    for (int k = index - 1; k >= 0; k--) {
-        printf("%c", lcs[k]);
-    }
-    printf("\n");
-
-    return 0;
+    // printf("Sorted weights: ");
+    // for (int i = 0; i < n; i++) {
+    //     printf("%d ", w[i]);
+    // }
+    // printf("\n");
 }
 
-int main() {
-    char t1[10] = { 'g','t','t','c','c','t','a','a','t','a' };
-    char t2[12] = { 'c','g','a','t','a','a','t','t','g','a','g','a' };
 
-    lsc(t1, t2);
+void least_w(int n,int m){
+  
+    float x[n];
+    int remaining=m;
+  int index[n];
+  int t_p;
+  int t_w;
+
+  for(int i=0;i<n;i++){
+     index[i]=i;
+     x[i]=0.0;
+  }
+
+  for(int i=0;i<n;i++){
+    for(int j=0;j<n-i-1;j++){
+        if(w[index[j]]>w[index[j+1]]){
+            int t=index[j];
+            index[j]=index[j+1];
+            index[j+1]=t;
+        }
+    }
+  }
+
+  for(int i=0;i<n && remaining>0;i++){
+        int id=index[i];
+        if(w[id]<=remaining){
+            remaining -= w[id];
+            t_p=p[id];
+            t_w=w[id];
+            x[id]=1.0;
+        }else{
+            x[id]=(float)remaining/w[id];
+            t_p=x[id]*p[i];
+            t_w=x[id]*w[i];
+            remaining = 0;
+
+        }
+  }
+
+     printf("\n Sorted weights: ");
+     for (int i = 0; i < n; i++) {
+        printf("%.2f ", x[i]);
+ }
+
+}
+void ratio(int n,int m){
+  
+    float x[n];
+    int remaining=m;
+  int index[n];
+  int t_p;
+  int t_w;
+
+  for(int i=0;i<n;i++){
+     index[i]=i;
+     x[i]=0.0;
+  }
+
+  for(int i=0;i<n;i++){
+    for(int j=0;j<n-i-1;j++){
+        if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]]) {
+            
+            int t=index[j];
+            index[j]=index[j+1];
+            index[j+1]=t;
+        }
+    }
+  }
+
+ 
+
+  for(int i=0;i<n && remaining>0;i++){
+        int id=index[i];
+        if(w[id]<=remaining){
+            remaining -= w[id];
+            t_p=p[id];
+            t_w=w[id];
+            x[id]=1.0;
+        }else{
+            x[id]=(float)remaining/w[id];
+            t_p=x[id]*p[i];
+            t_w=x[id]*w[i];
+            remaining = 0;
+
+        }
+  }
+
+     printf("\n \nSorted weights: ");
+     for (int i = 0; i < n; i++) {
+        printf("%.2f ", x[i]);
+ }
+
+
+}
+
+
+void max_profit(int n,int m){
+  
+    float x[n];
+    int remaining=m;
+  int index[n];
+  int t_p;
+  int t_w;
+
+  for(int i=0;i<n;i++){
+     index[i]=i;
+     x[i]=0.0;
+  }
+
+  for(int i=0;i<n;i++){
+    for(int j=0;j<n-i-1;j++){
+        if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]])
+{
+            int t=index[j];
+            index[j]=index[j+1];
+            index[j+1]=t;
+        }
+    }
+  }
+
+  for(int i=0;i<n && remaining>0;i++){
+        int id=index[i];
+        if(w[id]<=remaining){
+            remaining -= w[id];
+            t_p=p[id];
+            t_w=w[id];
+            x[id]=1.0;
+        }else{
+            x[id]=(float)remaining/w[id];
+            t_p=x[id]*p[i];
+            t_w=x[id]*w[i];
+            remaining = 0;
+
+        }
+  }
+
+     printf("\n \nSorted weights: ");
+     for (int i = 0; i < n; i++) {
+        printf("%.2f ", x[i]);
+ }
+
+
+}
+
+
+int main(){
+   
+    int m;
+     // For example matching the image: n=3, m=20, p=(25,24,15), w=(18,15,10)
+     printf("Enter number of elements (n): ");
+     scanf("%d", &n);
+   
+    
+    
+     printf("Enter weights (w1,w2,...): ");
+     for (int i = 0; i < n; i++)
+     {
+         scanf("%d", &w[i]);
+        
+
+     }
+     
+     printf("Enter value of m (capacity): ");
+     scanf("%d", &m);
+     int sum;
+     printf("Enter profits (p1,p2,...): ");
+     for (int i = 0; i < n; i++)
+         scanf("%d", &p[i]);
+
+
+      max_profit(n,m);
+      least_w(n,m);
+      ratio(n,m);
+     
 }

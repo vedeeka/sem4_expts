@@ -143,7 +143,7 @@ void max_profit(int n,int m){
 
   for(int i=0;i<n;i++){
     for(int j=0;j<n-i-1;j++){
-        if ((float)p[index[j]] / w[index[j]] < (float)p[index[j+1]] / w[index[j+1]])
+        if (p[index[j]]< p[index[j+1]])
 {
             int t=index[j];
             index[j]=index[j+1];
