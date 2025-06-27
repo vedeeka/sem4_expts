@@ -1,74 +1,123 @@
 #include <stdio.h>
+#include <string.h>
 
-int G[10][10];  // Adjacency matrix
-int x[10];      // Color assignments
-int n, m;       // n = number of vertices, m = current number of colors
-int found = 0;  // Flag to indicate valid coloring found
+typedef struct {
+    int u, v, w;
+} Edge;
 
+int parent[100];
 
-void NextValue(int k) {
-int j;
-while(1){
-    x[k]=(x[k]+1)%(n+1);
-   if( x[k]==0 )return;
+void adjust(Edge a[], int i, int n) {
+int j=2*i;
+Edge item=a[i];
+    while (j <= n) {
+    if((j<n)&& (a[j].w>a[j+1].w || a[j].w>=a[j+1].w && a[j].u > a[j+1].w)){
+        j++;
+    }
 
-
-
-if(G[x[k-1]][x[k]]!=0){
-   for(j=1;j<k;j++){
-    if(x[j]==x[k])break;
-   }
-
-            if (j == k) { 
-                if ((k < n) || (k == n && G[x[n]][x[1]] != 0))
-                    return;
-            }
+    if (item.w <= a[j].w && (item.w < a[j].w || item.u <= a[j].u)) {
+        break;
+    }
+    a[j/2]=a[j];
+    j=2*i;
 }
-}
+ a[j/2]=item;
+ return item;
+
 }
 
-// Recursive backtracking function
-void mColoring(int k) {
-while(1){
-    NextValue(k);
-   if( x[k]==0) return;
-    if(k==n)
-   
-    {   found=1;
-        for(int i=0;i<n;i++)
-        printf("%d",x[i]);
-    }else{
-        mColoring(k+1);
+void heapify(Edge a[], int n) {
+    for (int i = n / 2; i >= 1; i--) {
+        adjust(a, i, n);
     }
 }
+
+Edge DelMin(Edge a[], int *n) {
+    if (*n == 0) {
+        printf("Heap is empty\n");
+        Edge empty = {-1, -1, -1};
+        return empty;
+    }
+    Edge item = a[1];
+    a[1] = a[*n];
+    (*n)--;
+    adjust(a, 1, *n);
+    return item;
 }
 
-// Driver code
+void showmst(int n, Edge t[]) {
+    printf("The edges of the Minimum Spanning Tree (MST) are:\n");
+    for (int i = 0; i < n - 1; i++) {
+        printf("%d - %d (Weight: %d)\n", t[i].u, t[i].v, t[i].w);
+    }
+}
+
+int find(int i) {
+    while (parent[i] != i) {
+        parent[i] = parent[parent[i]]; // Path compression optimization
+        i = parent[i];
+    }
+    return i;
+}
+
+void unions(int i, int j) {
+    parent[i] = j;
+}
+
+int kruskal(Edge t[], int n, Edge a[], int edgeCount) {
+    heapify(a, edgeCount);
+    int mincost = 0;
+    int i = 0;
+    while ((i < n - 1) && (edgeCount > 0)) {
+        Edge e = DelMin(a, &edgeCount);
+        int j = find(e.u);
+        int k = find(e.v);
+        
+        if (j != k) {
+            t[i] = e;
+            mincost += e.w;
+            unions(j, k);
+            i++;
+        }
+    }
+    
+    if (i != n - 1) {
+        printf("The graph is not connected, MST cannot be formed.\n");
+        return -1;
+    }
+    
+    return mincost;
+}
+
 int main() {
-    int i, j, edges, u, v;
-
-    printf("Enter number of vertices: ");
+    Edge t[10];
+    Edge a[100];
+    int n, i, edgeCount = 0;
+    
+    printf("Enter the number of vertices: ");
     scanf("%d", &n);
-
-    // Initialize graph
-    for (i = 1; i <= n; i++)
-        for (j = 1; j <= n; j++)
-            G[i][j] = 0;
-
-    printf("Enter number of edges: ");
-    scanf("%d", &edges);
-    printf("Enter edges (u v):\n");
-    for (i = 0; i < edges; i++) {
-        scanf("%d %d", &u, &v);
-        G[u][v] = G[v][u] = 1;
+    
+    for (i = 0; i < n; i++) {
+        parent[i] = i;
     }
-
-      for (i = 1; i <= n; i++)
-        x[i] = 0;
-
-    x[1] = 1; 
-        mColoring(2);
-
-
+    
+    printf("Enter the edges and their costs (enter -1 -1 to stop):\n");
+    while (1) {
+        int u, v, w;
+        scanf("%d %d", &u, &v);
+        if (u == -1 && v == -1) {
+            break;
+        }
+        printf("Enter the cost of (%d, %d): ", u, v);
+        scanf("%d", &w);
+        a[++edgeCount] = (Edge){u, v, w};
+    }
+    
+    int mincost = kruskal(t, n, a, edgeCount);
+    if (mincost != -1) {
+        showmst(n, t);
+        printf("Minimum cost of spanning tree: %d\n", mincost);
+    }
+    
     return 0;
 }
