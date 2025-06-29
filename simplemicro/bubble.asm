@@ -140,3 +140,100 @@ program_exit:
     mov eax, 1
     mov ebx, 0
     int 0x80
+
+
+
+
+
+
+
+
+
+
+
+
+        %macro write 2
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+section .bss
+a resd 5
+i resb 16
+section .data
+
+newline db 10,0
+
+section .text
+
+global _start
+_start:
+
+mov esi,0
+loop:
+    cmp esi,5
+    je loop1
+    mov eax,3
+    mov ebx,0
+    mov ecx,i
+    mov edx,2
+    int 0x80
+    movzx eax,byte [i]
+    sub eax,'0'
+    
+    mov [a+ esi*4],eax
+    inc esi
+    call loop
+loop1:
+mov esi,0
+mov edi,0
+loop2:
+    cmp esi, 5
+    je sort_a
+    mov edi, 0 
+    loop3:
+      cmp edi,4
+      je done_inner
+      mov eax,[a+edi*4]
+      mov ecx,edi
+      inc ecx
+      mov ebx,[a+ecx*4]
+      cmp eax,ebx
+      jg swap
+      inc edi
+      jmp loop3
+done_inner:
+    inc esi
+    jmp loop2
+
+swap:
+    mov [a+ecx*4],eax
+    mov [a+edi*4],ebx
+    inc edi
+    call loop3
+    
+sort_a:
+    mov esi,0
+    
+    loopp:
+    cmp esi,5
+    je end
+    
+    mov eax,[a+ esi*4]
+    
+    add eax,'0'
+    mov [i],al
+    write i,1
+    
+    inc esi
+    call loopp
+
+
+end:
+   mov eax, 1
+    mov ebx, 0
+    int 0x80
+    
