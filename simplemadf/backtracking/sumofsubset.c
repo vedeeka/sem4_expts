@@ -6,22 +6,21 @@ int w[MAX], x[MAX];
 int n, m;
 
 void SumOfSub(int s, int k, int r) {
-    x[k] = 1;
-    if (s + w[k] == m) {
+    x[k] = 1;  // include w[k]
 
+    if (s + w[k] == m) {
         printf("Subset: ");
         for (int i = 1; i <= k; i++) {
-            if (x[i])
-                printf("%d ", w[i]);
+           
+                printf("%d ", x[i]);
         }
         printf("\n");
-    }
-    else if (s + w[k] + w[k+1] <= m) {
+    } else if (k + 1 <= n && s + w[k] + w[k + 1] <= m) {
         SumOfSub(s + w[k], k + 1, r - w[k]);
     }
 
-    if ((s + r - w[k] >= m) && (s + w[k+1] <= m)) {
-        x[k] = 0;
+    if (k + 1 <= n && s + w[k + 1] <= m && s + r - w[k] >= m) {
+        x[k] = 0;  // exclude w[k]
         SumOfSub(s, k + 1, r - w[k]);
     }
 }
@@ -45,7 +44,6 @@ int main() {
         return 0;
     }
 
-    printf("Subsets with sum %d are:\n", m);
     SumOfSub(0, 1, sum);
 
     return 0;

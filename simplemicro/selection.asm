@@ -152,3 +152,131 @@ program_exit:
     mov eax, 1
     mov ebx, 0
     int 0x80
+
+
+
+
+
+
+%macro write 2
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+section .bss
+a resd 5
+i resb 16
+
+section .data
+newline db 10, 0
+
+section .text
+global _start
+
+_start:
+
+; Reading 5 numbers
+mov esi, 0
+read_loop:
+    cmp esi, 5
+    je sort_loop
+
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, i
+    mov edx, 2
+    int 0x80
+
+    movzx eax, byte [i]
+    sub eax, '0'
+    mov [a + esi*4], eax
+
+    inc esi
+    jmp read_loop
+
+; Selection Sort
+sort_loop:
+    mov esi, 0
+outer_loop:
+    cmp esi, 5
+    je print_sorted
+
+    mov ecx, esi
+    mov edi, esi
+
+inner_loop:
+    inc edi
+    cmp edi, 5
+    je swap_check
+
+    mov eax, [a + edi*4]
+    mov ebx, [a + ecx*4]
+    cmp eax, ebx
+    jl update_min
+    jmp inner_loop
+
+update_min:
+    mov ecx, edi
+    jmp inner_loop
+
+swap_check:
+    cmp ecx, esi
+    je skip_swap
+
+    mov eax, [a + esi*4]
+    mov ebx, [a + ecx*4]
+    mov [a + esi*4], ebx
+    mov [a + ecx*4], eax
+
+skip_swap:
+    push esi
+    push ecx
+
+    call print_sorted2
+
+    pop ecx
+    pop esi
+
+    inc esi
+    jmp outer_loop
+
+print_sorted2:
+    mov edi, 0
+print_loop2:
+    cmp edi, 5
+    je ret_print
+
+    mov eax, [a + edi*4]
+    add eax, '0'
+    mov [i], al
+    write i, 1
+
+    inc edi
+    jmp print_loop2
+
+ret_print:
+    ret
+
+
+; Print sorted array
+print_sorted:
+    mov esi, 0
+print_loop:
+    cmp esi, 5
+    je exit
+
+    mov eax, [a + esi*4]
+    add eax, '0'
+    mov [i], al
+    write i, 1
+
+    inc esi
+    jmp print_loop
+
+exit:
+    mov eax, 1
+    mov ebx, 0
+    int 0x80
