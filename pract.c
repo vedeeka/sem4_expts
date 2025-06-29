@@ -1,123 +1,131 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#define MAX 256
+
+typedef struct Node {
+    char ch;
+    int freq;
+    struct Node *left, *right;
+    int l;
+    int order;
+} Node;
 
 typedef struct {
-    int u, v, w;
-} Edge;
+    Node* data[MAX];
+    int size;
+} PQ;
 
-int parent[100];
+int freq[MAX] = {0}, order_count = 0;
 
-void adjust(Edge a[], int i, int n) {
-int j=2*i;
-Edge item=a[i];
-    while (j <= n) {
-    if((j<n)&& (a[j].w>a[j+1].w || a[j].w>=a[j+1].w && a[j].u > a[j+1].w)){
-        j++;
+Node* createNode(char ch, int freq, int isLeaf) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->ch = ch;
+    node->freq = freq;
+    node->left = node->right = NULL;
+    node->l = isLeaf;
+    node->order = order_count++;
+    return node;
+}
+
+
+
+int compare(Node* a, Node* b) {
+    if (a->freq != b->freq) return a->freq - b->freq;
+    if (a->l && b->l) return a->ch - b->ch;
+    if (a->l != b->l) return a->l ? -1 : 1;
+    return a->order - b->order;
+}
+
+void insertQueue(PQ* q, Node* node) {
+int i=q->size++;
+while(i>0 && compare(node,q->data[(i-1)/2])>=0)
+{
+    q->data[i]=q->data[(i-1)/2];
+    i=(i-1)/2;
+}
+
+
+q->data[i]=node;
+}
+
+Node* removeMin(PQ* q) {
+Node* min = q->data[0];
+Node* last =q->data[q->size--];
+int i=0,child;
+while(i*2+1<q->size){
+    child=i*2+1;
+if(child+1<q->size && compare(q->data[child+1],q->data[child])<0){
+child++;
+}
+
+if(compare(last,q->data[child])<=0){
+  break;
+}
+  q->data[i]=q->data[child];
+        i = child;
     }
+    q->data[i] = last;
+    return min;
+}
 
-    if (item.w <= a[j].w && (item.w < a[j].w || item.u <= a[j].u)) {
-        break;
+void generateCodes(Node* root, char* code, int depth, char codes[MAX][MAX]) {
+    if (!root) return;
+    if (root->l) {
+        code[depth] = '\0';
+        strcpy(codes[(unsigned char)root->ch], code);
+        return;
     }
-    a[j/2]=a[j];
-    j=2*i;
-}
- a[j/2]=item;
- return item;
-
+    code[depth] = '0';
+    generateCodes(root->left, code, depth + 1, codes);
+    code[depth] = '1';
+    generateCodes(root->right, code, depth + 1, codes);
 }
 
-void heapify(Edge a[], int n) {
-    for (int i = n / 2; i >= 1; i--) {
-        adjust(a, i, n);
-    }
-}
+Node* buildHuffmanTree(char* str) {
+    PQ q;
+    q.size = 0;
+   
 
-Edge DelMin(Edge a[], int *n) {
-    if (*n == 0) {
-        printf("Heap is empty\n");
-        Edge empty = {-1, -1, -1};
-        return empty;
-    }
-    Edge item = a[1];
-    a[1] = a[*n];
-    (*n)--;
-    adjust(a, 1, *n);
-    return item;
-}
+    for (int i = 0; str[i]; i++)
+        freq[(unsigned char)str[i]]++;
 
-void showmst(int n, Edge t[]) {
-    printf("The edges of the Minimum Spanning Tree (MST) are:\n");
-    for (int i = 0; i < n - 1; i++) {
-        printf("%d - %d (Weight: %d)\n", t[i].u, t[i].v, t[i].w);
-    }
-}
-
-int find(int i) {
-    while (parent[i] != i) {
-        parent[i] = parent[parent[i]]; // Path compression optimization
-        i = parent[i];
-    }
-    return i;
-}
-
-void unions(int i, int j) {
-    parent[i] = j;
-}
-
-int kruskal(Edge t[], int n, Edge a[], int edgeCount) {
-    heapify(a, edgeCount);
-    int mincost = 0;
-    int i = 0;
-    while ((i < n - 1) && (edgeCount > 0)) {
-        Edge e = DelMin(a, &edgeCount);
-        int j = find(e.u);
-        int k = find(e.v);
-        
-        if (j != k) {
-            t[i] = e;
-            mincost += e.w;
-            unions(j, k);
-            i++;
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            insertQueue(&q, createNode((char)i, freq[i], 1));
         }
     }
-    
-    if (i != n - 1) {
-        printf("The graph is not connected, MST cannot be formed.\n");
-        return -1;
+
+    while (q.size > 1) {
+        Node* left = removeMin(&q);
+        Node* right = removeMin(&q);
+        Node* merged = createNode('\0', left->freq + right->freq, 0);
+        merged->left = left;
+        merged->right = right;
+        insertQueue(&q, merged);
     }
-    
-    return mincost;
+
+    return removeMin(&q);
 }
 
 int main() {
-    Edge t[10];
-    Edge a[100];
-    int n, i, edgeCount = 0;
-    
-    printf("Enter the number of vertices: ");
-    scanf("%d", &n);
-    
-    for (i = 0; i < n; i++) {
-        parent[i] = i;
-    }
-    
-    printf("Enter the edges and their costs (enter -1 -1 to stop):\n");
-    while (1) {
-        int u, v, w;
-        scanf("%d %d", &u, &v);
-        if (u == -1 && v == -1) {
-            break;
+    char str[1000], codes[MAX][MAX] = {{0}}, buffer[MAX];
+
+    printf("Enter the input string: ");
+    scanf(" %[^\n]", str);
+
+    Node* root = buildHuffmanTree(str);
+    generateCodes(root, buffer, 0, codes);
+
+    printf("\nHuffman Codes:\nCharacter | Code\n------------------------\n");
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            if (i == ' ')
+                printf("   sp     | %s\n", codes[i]);
+            else
+                printf("    %c     | %s\n", i, codes[i]);
         }
-        printf("Enter the cost of (%d, %d): ", u, v);
-        scanf("%d", &w);
-        a[++edgeCount] = (Edge){u, v, w};
     }
-    
-    int mincost = kruskal(t, n, a, edgeCount);
-    if (mincost != -1) {
-        showmst(n, t);
-        printf("Minimum cost of spanning tree: %d\n", mincost);
-    }
-    
+
     return 0;
 }
