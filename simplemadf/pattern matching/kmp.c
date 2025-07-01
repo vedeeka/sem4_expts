@@ -48,13 +48,10 @@ int main() {
     char text[MAX], pattern[MAX];
 
     printf("Enter the text: ");
-    fgets(text, sizeof(text), stdin);
-
-    text[strcspn(text, "\n")] = '\0';
+    scanf(" %[^\n]", text);
 
     printf("Enter the pattern to search: ");
-    fgets(pattern, sizeof(pattern), stdin);
-    pattern[strcspn(pattern, "\n")] = '\0';
+    scanf(" %[^\n]", pattern);
 
     int index = KMPMatch(text, pattern);
 
