@@ -7,7 +7,7 @@
 
 int dist[MAX];
 bool s[MAX];
-
+int pred[MAX];
 int minDist (int n) {
 	int min = INF, index, i;
 	for (i = 1; i <= n; i++) {
@@ -22,12 +22,14 @@ int minDist (int n) {
 void shortestPath (int n, int cost[MAX][MAX], int v) {
 	int i, j, w;
 	for (i = 1; i <= n; i++) {
+
+        pred[i]=v;
 		s[i] = false;
 		dist[i] = cost[v][i];
 	}
 	s[v] = true;
 	dist[v] = 0;
-
+     pred[v] = -1;
 	
 	
 	for (i = 2; i <= n; i++) {
@@ -39,13 +41,21 @@ void shortestPath (int n, int cost[MAX][MAX], int v) {
 		for (w = 1; w <= n; w++) {
 			if (!s[w] && cost[u][w] && dist[u] != INF && dist[w] > dist[u] + cost[u][w]) {
 				dist[w] = dist[u] + cost[u][w];
+                 pred[w] = u;
 			}
 		}
 		
 
 	}
 }
-
+void printPath(int v) {
+    if (pred[v] == -1) {
+        printf("%d", v);
+        return;
+    }
+    printPath(pred[v]);
+    printf(" -> %d", v);
+}
 int main () {
 	int n, maxE, i, j, o, d, w, start	;
 	int cost[MAX][MAX];
@@ -82,11 +92,16 @@ int main () {
     shortestPath (n, cost, start);
     
     printf("\nVertex\tShortest Distance from %d\n", start);
+    printf("\nVertex\tDistance from %d\tPath\n", start);
     for (i = 1; i <= n; i++) {
         printf("%d\t", i);
-        if (dist[i] == INF)
-            printf("INF\n");
-        else
-            printf("%d\n", dist[i]);
+        if (dist[i] == INF) {
+            printf("INF\t\tNo path\n");
+        } else {
+            printf("%d\t\t", dist[i]);
+            printPath(i);
+            printf("\n");
+        }
     }
+
 }
