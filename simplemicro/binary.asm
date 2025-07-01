@@ -279,3 +279,261 @@ end:
     mov ebx, 0
     int 0x80
     
+
+
+
+
+%macro write 2
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, %1
+    mov edx, %2
+    int 0x80
+%endmacro
+
+section .bss
+a resd 5
+i resb 16
+m resb 2
+section .data
+l db '0'
+u db '4'
+notfound_msg db 'Not found', 10
+
+chh dd 3
+foundd db 'found'
+newline db 10,0
+space db ' '
+left db 'left:'
+right db 'right:'
+mid db 'mid:'
+
+section .text
+
+global _start
+_start:
+
+mov esi,0
+loop:
+    cmp esi,5
+    je sort
+    mov eax,3
+    mov ebx,0
+    mov ecx,i
+    mov edx,2
+    int 0x80
+    movzx eax,byte [i]
+    sub eax,'0'
+    
+    mov [a+ esi*4],eax
+    inc esi
+    call loop
+sort:
+
+    mov al, [l]
+    sub al, '0'
+    mov bl, [u]
+    sub bl, '0'
+      cmp al, bl
+    jg notfound 
+    add al, bl
+    shr al, 1
+    add al, '0'
+
+    mov [m], al
+
+    write left, 5
+    write l, 1
+
+    write mid, 4
+    write m, 1       ; ✅ fix: print only 1 byte
+
+    write right, 6
+    write u, 1
+    write newline,1
+    ; ✅ FIXED: convert [m] from ASCII to index
+    mov al, [m]
+    sub al, '0'
+    movzx esi, al
+
+    mov eax, [a + esi*4]
+    cmp eax, [chh]
+    je found
+    jg less
+    jl big
+    call end
+
+less:
+    mov al, [m]
+    sub al, '0'
+    dec al             ; mid - 1
+    add al, '0'
+    mov [u], al
+    call sort
+
+big:
+mov al,[m]
+sub al,'0'
+inc al
+add al,'0'
+mov [l],al
+call sort      ; go again
+notfound:
+    write notfound_msg, 11   
+    call end
+
+found:
+    write foundd, 6         ; 'found' is 6 letters (not 7 unless newline is added)
+    
+    mov eax, esi            ; convert mid index to ASCII
+    add al, '0'
+    mov [i], al
+    write i, 1              ; print index
+    
+    call end
+
+
+end:
+   mov eax, 1
+    mov ebx, 0
+    int 0x80
+
+
+
+
+
+
+
+
+    %macro write 2
+mov eax,4
+mov ebx,1
+mov ecx,%1
+mov edx,%2
+int 0x80
+%endmacro
+
+%macro read 2
+mov eax,3
+mov ebx,0
+mov ecx,%1
+mov edx,%2
+int 0x80
+%endmacro
+
+section	.data
+l db '0'
+u db '4'
+n db 10,0
+f db 'f'
+nf db 'nf'
+section .bss
+i resb 2
+a resd 5
+m resb 2
+section	.text
+	global _start     
+_start:       
+mov esi,0
+loop:
+  cmp esi,5
+  je binary
+  
+  read i,2
+  movzx eax,byte [i]
+  sub al,'0'
+  
+  mov [a+esi*4],eax
+  inc esi
+  jmp loop
+
+
+ binary:
+ 
+  write l,1
+ 
+ 
+ write u,1
+ 
+ movzx eax,byte[l]
+ sub al,'0'
+ movzx ebx,byte[u]
+
+ sub bl,'0'
+cmp al,bl
+jg nfound
+ 
+ add al,bl
+ shr al,1
+add al, '0'
+mov [m], al
+write m,1
+write n,1
+
+mov eax, [l]
+sub al,'0'
+mov ebx,[u]
+sub bl,'0'
+mov ecx, [m]
+sub cl, '0'
+
+
+mov edx,  [a + ecx*4]    ; if a resb 5
+
+cmp edx,3
+je found
+jl less
+jg big
+    
+
+less:
+    mov al, [m]
+    sub al, '0'
+inc al
+add al,'0'
+mov [l],al
+jmp binary
+
+big:
+    mov al, [m]
+    sub al, '0'
+dec al
+add al,'0'
+mov [u],al
+jmp binary
+
+found:
+write f,1
+jmp end
+
+
+nfound:
+write nf,1
+jmp end
+
+display:
+mov esi,0
+    loop2:
+    cmp esi,5
+    je end
+     
+    mov eax,[a+esi*4]
+    add al,'0'
+    mov [i],al
+    write i ,2
+    inc esi
+    jmp loop2
+    
+
+
+
+
+
+
+
+
+end:
+mov eax,1
+mov ebx,0
+int 0x80
+
