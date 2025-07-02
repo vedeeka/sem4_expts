@@ -2,12 +2,7 @@
 
 // Recursive Binary Search function
 int BinarySearch(int a[], int i, int l, int x) {
-    if (l == i) { // Base case: single element
-        if (x == a[i])
-            return i;
-        else
-            return 0;
-    } else {
+
         int mid = (i + l) / 2;
 
         if (x == a[mid])
@@ -16,7 +11,7 @@ int BinarySearch(int a[], int i, int l, int x) {
             return BinarySearch(a, i, mid - 1, x);
         else
             return BinarySearch(a, mid + 1, l, x);
-    }
+    
 }
 
 int main() {
