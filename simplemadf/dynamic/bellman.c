@@ -11,13 +11,14 @@ void BellmanFord(int cost[MAX][MAX], int dist[MAX], int pred[MAX], int n, int v)
         pred[i] = -1;
     }
     dist[v] = 0;
-
+    
     for (k = 2; k <= n - 1; k++) {
         for (j = 1; j <= n; j++) {
             for (i = 1; i <= n; i++) {
                 if (dist[i] != INF && cost[i][j] != INF && dist[j] > dist[i] + cost[i][j]) {
                     dist[j] = dist[i] + cost[i][j];
                     pred[j] = i;
+                    
                 }
             }
         }
