@@ -14,14 +14,7 @@ mov edx,%2
 int 0x80
 %endmacro
 section	.data
-l db '0'
-u db '4'
-n db 10,0
-f db 'f', 10   
-nf db 'nf'
-k db 1
-ne db 0
-p db 0
+
 section .bss
 a resd 5
 i resb 20
