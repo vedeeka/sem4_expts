@@ -1,85 +1,53 @@
-#include <stdio.h>
-
-#define MAX 100
-#define INF 1000000000
-
+#include<stdio.h>
+int n;
+#define MAX 20
 int a[MAX];
 
-void Interchange(int i, int j) {
-    int temp = a[i];
-    a[i] = a[j];
-    a[j] = temp;
+void inter(int i,int j){
+    int t=a[i];
+    a[i]=a[j];
+    a[j]=t;
+
 }
 
-// Hoare's Partition (you provided), adapted to 0-based indexing
-int Partition(int m, int p) {
-    int v = a[m];
-    int i = m, j = p;
+int partition(int l,int u){
+int v=a[l];
+int i=l;
+int j=u;
+while(1){
+    while(a[i]<v)i++;
+    while(a[j]>v)j--;
 
-    while (1) {
-        do {
-            i++;
-        } while (i <= p && a[i] < v);
-
-        do {
-            j--;
-        } while (a[j] > v);
-
-        if (i < j)
-            Interchange(i, j);
-        else
-            break;
-    }
-
-    a[m] = a[j];
-    a[j] = v;
-    return j;
+    if(i<j){inter(i,j);}
+    else break;
 }
 
-// Select algorithm for k-th smallest element (0-based)
-void Select(int n, int k) {
-    int low = 0;
-    int up = n;
-    a[n] = INF;  // Sentinel at a[n], since input ends at a[n-1]
-
-    while (1) {
-        int j = Partition(low, up);
-
-        if (k == j)
-            return;
-        else if (k < j)
-            up = j;
-        else
-            low = j + 1;
-    }
+return j;
 }
 
-int main() {
-    int n, k;
 
+
+void quick_sort(int l,int u){
+if(l<u){
+    int j=partition(l,u);
+    quick_sort(l,j-1);
+    quick_sort(j+1,u);
+}
+}
+int main(){
     printf("Enter number of elements: ");
     scanf("%d", &n);
 
-    printf("Enter %d elements:\n", n);
-    for (int i = 0; i < n; i++)
+    printf("Enter sorted array elements:\n");
+    for (int i = 1; i <= n; i++) 
         scanf("%d", &a[i]);
+    int x;
+   
+    quick_sort(1,n);
 
-    printf("Enter k (0-based index of k-th smallest element): ");
-    scanf("%d", &k);
-
-    if (k < 0 || k >= n) {
-        printf("Invalid k\n");
-        return 1;
-    }
-
-    Select(n, k);
-
-    printf("The %d-th smallest element is: %d\n", k, a[k]);
-
-    printf("Array after Select (not fully sorted):\n");
-    for (int i = 0; i < n; i++)
+    printf("Array after Select:\n");
+    for (int i = 1; i <= n; i++)
         printf("%d ", a[i]);
     printf("\n");
 
-    return 0;
 }
