@@ -24,7 +24,7 @@ int Find(int i, int j) {
 }
 
 // OBST algorithm
-void OBST(float p[], float q[], int n) {
+void OBST(int p[], int q[], int n) {
     for (int i = 0; i < n; i++) {
         w[i][i] = q[i];
         c[i][i] = 0;
@@ -32,6 +32,9 @@ void OBST(float p[], float q[], int n) {
         w[i][i + 1] = q[i] + q[i + 1] + p[i + 1];
         c[i][i + 1] = q[i] + q[i + 1] + p[i + 1];
         r[i][i + 1] = i + 1;
+
+        printf("Initial w[%d][%d] = %.2f, c[%d][%d] = %.2f, r = %d\n",
+               i, i + 1, w[i][i + 1], i, i + 1, c[i][i + 1], r[i][i + 1]);
     }
 
     w[n][n] = q[n];
@@ -45,6 +48,10 @@ void OBST(float p[], float q[], int n) {
             int k = Find(i, j);
             c[i][j] = w[i][j] + c[i][k - 1] + c[k][j];
             r[i][j] = k;
+
+
+            printf("Subtree (%d,%d): w=%.2f, root=%d, cost=%.2f\n",
+                   i, j, w[i][j], r[i][j], c[i][j]);
         }
     }
 
@@ -52,10 +59,26 @@ void OBST(float p[], float q[], int n) {
     printf("Total weight: %.2f\n", w[0][n]);
     printf("Root of OBST: %d\n", r[0][n]);
 }
+
 int main() {
-    int n = 5;
-    float p[] = {0,5, 6, 4, 3, 7};   // p[1..n]
-    float q[] = {7,6,5,4,3,7}; // q[0..n]
+    int n;
+    int p[MAX], q[MAX];
+
+    printf("Enter number of keys: ");
+    scanf("%d", &n);
+
+    printf("Enter success probabilities p[1..%d]:\n", n);
+    p[0] = 0;  // dummy to align indices
+    for (int i = 1; i <= n; i++) {
+      
+        scanf("%d", &p[i]);
+    }
+
+    printf("Enter failure probabilities q[0..%d]:\n", n);
+    for (int i = 0; i <= n; i++) {
+       
+        scanf("%d", &q[i]);
+    }
 
     OBST(p, q, n);
     return 0;
